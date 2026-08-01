@@ -1,0 +1,76 @@
+=====================================================
+  DİNİ KÜTÜPHANE — KULLANIM REHBERİ
+=====================================================
+
+Bu uygulama; dualar, sureler, mevlid, ilahiler ve
+kasideler için bir kitaplıktır. Bilgisayar, telefon ve
+tablette tarayıcıdan kullanılır.
+
+-----------------------------------------------------
+1) BAŞLATMA
+-----------------------------------------------------
+Bilgisayarda:
+  • "Baslat.bat" dosyasına çift tıklayın.
+  • Tarayıcı otomatik olarak açılır:
+      http://localhost:3000
+
+Telefon ve tablette (aynı wifi ağındaysa):
+  • "Baslat.bat" ile uygulamayı bilgisayarda başlatın.
+  • Ekranda beliren şu adreslerden birini telefona yazın
+    (örnek):  http://192.168.1.10:3000
+  • Adres "Baslat.bat" penceresinde yazılı olur.
+  • Telefonda "Ekrana Ekle" ile ana ekrana kısayol
+    ekleyebilirsiniz (uygulama gibi görünür).
+
+Not: Uygulama açıkken bilgisayar kapatılırsa sunucu
+durur; tekrar "Baslat.bat" çalıştırın.
+
+-----------------------------------------------------
+2) BÖLÜMLER (KLASÖRLER)
+-----------------------------------------------------
+Ana kitaplıkta 6 bölüm vardır:
+  • Dualar      — program duası, hatim duası vb.
+  • Sureler     — aşırlar, ayetler (Arapça + meali)
+  • Mevlid      — tevhid, veladet, miraç, rihlet bahrları
+  • İlahiler    — mevlid ilahileri
+  • Kasideler   — kaside bilgileri ve örnekleri
+  • Salavatlar  — salâvat-ı şerîfeler
+
+Her bölümün içinde her dua/sure/mevlid bölümü AYRI BİR
+Word (.docx) dosyası olarak durur.
+
+-----------------------------------------------------
+3) YENİ KLASÖR / DOSYA EKLEME
+-----------------------------------------------------
+  • "＋ Klasör"  → o anda bulunduğunuz bölümün içinde yeni
+                   bir klasör oluşturur.
+  • "⬆ Yükle"   → Word (.docx), PDF ve görsel (fotoğraf)
+                   dosyalarını o anda bulunduğunuz klasöre
+                   yükler. Birden fazla dosya seçilebilir.
+  • Bir dosyanın üzerine gelince beliren "🗑" ile silinir.
+  • Fotoğraflar (png/jpg) doğrudan görüntülenir; PDF ve
+    Word dosyaları tarayıcı içinde açılır.
+
+-----------------------------------------------------
+4) DOSYALARI GÖRÜNTÜLEME
+-----------------------------------------------------
+  • Word dosyasına tıklayın → tarayıcı içinde açılır.
+  • PDF dosyasına tıklayın  → tarayıcı içinde açılır.
+  • Fotoğrafa tıklayın      → tam ekran gösterilir.
+  • Görüntüleyicide "⬇" ile dosyayı indirebilirsiniz.
+
+-----------------------------------------------------
+5) DOSYALAR NEREDE SAKLANIYOR?
+-----------------------------------------------------
+Tüm dosyalar bu klasörün içindeki "storage" klasöründe
+durur. Dilediğiniz .docx, .pdf veya resmi buraya elle
+kopyalayıp bırakabilirsiniz; uygulamayı yeniden açtığınızda
+kitaplıkta görünür.
+
+-----------------------------------------------------
+6) GEREKİRSE YENİDEN KURULUM
+-----------------------------------------------------
+"Dinikutuphane" klasörünü başka bir bilgisayara kopyalayın,
+"Kur.bat"ı çalıştırın, sonra "Baslat.bat" ile başlatın.
+Storage klasörünüzdeki dosyalar korunur.
+=====================================================

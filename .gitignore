@@ -1,0 +1,12 @@
+﻿# Bağımlılıklar
+node_modules/
+
+# OCR önbelleği
+.ocr-cache/
+
+# İşletim sistemi dosyaları
+.DS_Store
+Thumbs.db
+
+# Yerel yapılandırma
+.env
