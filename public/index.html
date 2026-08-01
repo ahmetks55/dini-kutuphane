@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+  <meta name="theme-color" content="#0f5132" />
+  <title>Dini Kutuphane</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%93%96%3C/text%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="styles.css?v=13" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-left">
+      <button class="btn btn-ghost icon-btn" onclick="toggleCatMenu()" title="Kategoriler" aria-label="Menü">☰</button>
+    </div>
+    <div class="brand" onclick="goHome()">
+      <span class="brand-icon">📖</span>
+      <div class="brand-text">
+        <h1>Dini Kutuphane</h1>
+        <p>Dualar · Sureler · Mevlid · Ilahiler · Kasideler · Salavatlar</p>
+      </div>
+    </div>
+    <div class="top-actions">
+      <button class="btn btn-ghost" onclick="openSearch()">🔍 <span class="btn-label">Ara</span></button>
+      <div class="upload-wrap">
+        <button class="btn btn-primary" id="uploadBtn" onclick="toggleUploadMenu()">＋ <span class="btn-label">Yeni</span> <span class="caret">▾</span></button>
+        <div class="upload-menu" id="uploadMenu" hidden>
+          <button class="upload-menu-item" onclick="closeUploadMenu(); promptNewFolder()">📁 Klasor Ekle</button>
+          <button class="upload-menu-item" onclick="closeUploadMenu(); openUpload()">📄 Dosya Yükle</button>
+          <button class="upload-menu-item" onclick="closeUploadMenu(); openScan()">📷 Kamera ile Tara</button>
+          <button class="upload-menu-item" onclick="closeUploadMenu(); openNewText()">✏️ Yeni Metin Dosyası</button>
+        </div>
+      </div>
+    </div>
+    <nav class="cat-menu" id="catMenu" hidden></nav>
+  </header>
+
+  <main class="container">
+    <div class="breadcrumb" id="breadcrumb"></div>
+    <div class="toolbar">
+      <h2 class="folder-title" id="folderTitle">Ana Kitaplik</h2>
+      <span class="item-count" id="itemCount"></span>
+    </div>
+    <section class="grid" id="grid"></section>
+  </main>
+
+  <div class="toast" id="toast"></div>
+
+  <!-- File viewer modal -->
+  <div class="modal-overlay" id="viewerModal" hidden>
+    <div class="modal viewer">
+      <div class="modal-head">
+        <button class="btn btn-ghost icon-btn" onclick="closeViewer()">✕</button>
+        <div class="modal-title" id="viewerTitle">Dosya</div>
+        <button class="btn btn-ghost" onclick="downloadCurrent()" title="Indir">⬇</button>
+      </div>
+      <div class="viewer-body" id="viewerBody"></div>
+    </div>
+  </div>
+
+  <!-- Rename modal -->
+  <div class="modal-overlay" id="renameModal" hidden>
+    <div class="modal">
+      <div class="modal-head">
+        <button class="btn btn-ghost icon-btn" onclick="closeRename()">✕</button>
+        <div class="modal-title">Yeniden Adlandır</div>
+        <span></span>
+      </div>
+      <div class="modal-body">
+        <label class="hint small" for="renameInput">Yeni ad:</label>
+        <input type="text" id="renameInput" placeholder="Yeni ad (uzantıyla)" autocomplete="off" />
+        <div class="btn-row">
+          <button class="btn btn-primary" onclick="doRename()">Kaydet</button>
+          <button class="btn btn-ghost" onclick="closeRename()">Vazgeç</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit modal -->
+  <div class="modal-overlay" id="editModal" hidden>
+    <div class="modal viewer">
+      <div class="modal-head">
+        <button class="btn btn-ghost icon-btn" onclick="closeEdit()">✕</button>
+        <div class="modal-title" id="editTitle">Düzenle</div>
+        <span></span>
+      </div>
+      <div class="modal-body">
+        <textarea id="editContent" class="newtext-area" rows="14" placeholder="Metni buradan düzenleyin..."></textarea>
+        <div class="btn-row">
+          <button class="btn btn-primary" onclick="doEdit()">💾 Kaydet</button>
+          <button class="btn btn-ghost" onclick="closeEdit()">Vazgeç</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Move modal -->
+  <div class="modal-overlay" id="moveModal" hidden>
+    <div class="modal">
+      <div class="modal-head">
+        <button class="btn btn-ghost icon-btn" onclick="closeMoveModal()">✕</button>
+        <div class="modal-title">Taşı</div>
+        <span></span>
+      </div>
+      <div class="modal-body">
+        <p class="hint">Dosya: <strong id="moveTarget"></strong></p>
+        <label class="hint small" for="moveFolder">Hedef klasör:</label>
+        <select id="moveFolder" class="move-folder"></select>
+        <div class="btn-row">
+          <button class="btn btn-primary" onclick="doMove()">Taşı</button>
+          <button class="btn btn-ghost" onclick="closeMoveModal()">Vazgeç</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Search modal -->
+  <div class="modal-overlay" id="searchModal" hidden>
+    <div class="modal">
+      <div class="modal-head">
+        <button class="btn btn-ghost icon-btn" onclick="closeSearch()">✕</button>
+        <div class="modal-title">Ara</div>
+        <span></span>
+      </div>
+      <div class="modal-body">
+        <input type="search" id="searchInput" placeholder="Dosya / klasör adı ara..." autocomplete="off" />
+        <p class="hint small">Tüm kitaplıkta dosya ve klasör adlarında arar.</p>
+        <div class="search-results" id="searchResults"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scan modal -->
+  <div class="modal-overlay" id="scanModal" hidden>
+    <div class="modal">
+      <div class="modal-head">
+        <button class="btn btn-ghost icon-btn" onclick="closeScan()">✕</button>
+        <div class="modal-title">Belge Tara</div>
+        <span></span>
+      </div>
+      <div class="modal-body">
+        <div class="scan-actions-grid">
+          <div class="scan-form-side">
+            <p class="hint">Hedef klasör: <strong id="scanTarget">Ana Kitaplik</strong></p>
+            <button class="btn btn-primary scan-capture-btn" onclick="document.getElementById('scanInput').click()">📷 Kamera ile Çek</button>
+            <input type="file" id="scanInput" accept="image/*" capture="environment" hidden />
+            <input type="text" id="scanName" placeholder="Dosya adı (ör. Tarama-1)" />
+            <p class="hint small" id="scanOcrHint" hidden>Önce "Tara (Önizleme)" ile metni tanıtın, hataları düzelttikten sonra "Kaydet"e basın. PDF formatında doğrudan kaydedilir.</p>
+            <div class="format-row">
+              <label><input type="radio" name="sfmt" value="pdf" /> PDF (.pdf)</label>
+              <label><input type="radio" name="sfmt" value="docx" checked /> Word (.docx)</label>
+              <label><input type="radio" name="sfmt" value="txt" /> Metin (.txt)</label>
+            </div>
+            <div class="format-row" id="scanLangRow">
+              <label>OCR dili:</label>
+              <select id="scanLang">
+                <option value="tur">Türkçe</option>
+                <option value="eng">English</option>
+                <option value="ara">العربية</option>
+              </select>
+            </div>
+            <p class="scan-progress" id="scanProgress" hidden></p>
+            <div class="btn-row">
+              <button class="btn btn-ghost" id="scanOcrBtn" onclick="runScanOcr()">🔎 Tara (Önizleme)</button>
+              <button class="btn btn-primary" id="scanSaveBtn" onclick="saveScan()">💾 Kaydet</button>
+              <button class="btn btn-ghost" onclick="closeScan()">Vazgeç</button>
+            </div>
+          </div>
+          <div class="scan-form-side">
+            <img id="scanPreview" class="scan-preview" hidden />
+            <textarea id="scanText" class="scan-text" rows="12" placeholder="Tanınan metin burada görünecek; hataları düzelttikten sonra Kaydet'e basın." hidden></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- New text modal -->
+  <div class="modal-overlay" id="newTextModal" hidden>
+    <div class="modal">
+      <div class="modal-head">
+        <button class="btn btn-ghost icon-btn" onclick="closeNewText()">✕</button>
+        <div class="modal-title">Yeni Metin Dosyası</div>
+        <span></span>
+      </div>
+      <div class="modal-body">
+        <p class="hint">Hedef klasör: <strong id="newTextTarget">Ana Kitaplik</strong></p>
+        <input type="text" id="newTextName" placeholder="Dosya adı (uzantı gerekmez)" />
+        <textarea id="newTextContent" class="newtext-area" rows="14" placeholder="Metni buraya yazın veya yapıştırın..."></textarea>
+        <div class="btn-row">
+          <button class="btn btn-primary" onclick="saveNewText()">💾 Kaydet</button>
+          <button class="btn btn-ghost" onclick="closeNewText()">Vazgeç</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Upload modal -->
+  <div class="modal-overlay" id="uploadModal" hidden>
+    <div class="modal">
+      <div class="modal-head">
+        <button class="btn btn-ghost icon-btn" onclick="closeUpload()">✕</button>
+        <div class="modal-title">Dosya Yükle</div>
+        <span></span>
+      </div>
+      <div class="modal-body">
+        <p class="hint">Hedef klasör: <strong id="uploadTarget">Ana Kitaplik</strong></p>
+        <input type="file" id="fileInput" multiple
+          accept=".docx,.pdf,.doc,.txt,.md,.png,.jpg,.jpeg,.gif,.webp,.bmp" />
+        <p class="hint small">Word (.docx), PDF ve görsel (png/jpg) dosyalari yükleyebilirsiniz.</p>
+        <div class="btn-row">
+          <button class="btn btn-primary" onclick="uploadFiles()">Yükle</button>
+          <button class="btn btn-ghost" onclick="closeUpload()">Vazgeç</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/vendor/mammoth/mammoth.browser.min.js"></script>
+  <script src="app.js?v=14"></script>
+</body>
+</html>
