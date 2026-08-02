@@ -533,9 +533,9 @@ function openScan() {
   const d = new Date();
   const stamp = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0") + "-" + String(d.getHours()).padStart(2, "0") + String(d.getMinutes()).padStart(2, "0");
   document.getElementById("scanName").value = "Tarama-" + stamp;
-  const preview = document.getElementById("scanPreview");
-  preview.hidden = true;
-  preview.src = "";
+  const stack = document.getElementById("scanStack");
+  stack.innerHTML = "";
+  stack.hidden = true;
   document.getElementById("scanInput").value = "";
   document.querySelector('input[name="sfmt"][value="docx"]').checked = true;
   document.getElementById("scanProgress").hidden = true;
@@ -833,6 +833,183 @@ function preprocessImage(file) {
   });
 }
 
+/* ---------------- Scan page stack + crop ---------------- */
+function renderScanStack() {
+  const stack = document.getElementById("scanStack");
+  stack.innerHTML = "";
+  if (!state.scanFiles.length) { stack.hidden = true; return; }
+  stack.hidden = false;
+  state.scanFiles.forEach((f, i) => {
+    const page = document.createElement("div");
+    page.className = "scan-page";
+    const head = document.createElement("div");
+    head.className = "scan-page-head";
+    const lbl = document.createElement("span");
+    lbl.textContent = (i + 1) + ". sayfa";
+    const btns = document.createElement("span");
+    const cropB = document.createElement("button");
+    cropB.className = "btn btn-ghost";
+    cropB.textContent = "✂ Kırp";
+    cropB.onclick = (ev) => { ev.stopPropagation(); openCrop(i); };
+    const delB = document.createElement("button");
+    delB.className = "btn btn-ghost";
+    delB.textContent = "🗑 Sil";
+    delB.onclick = (ev) => { ev.stopPropagation(); removeScanPage(i); };
+    btns.appendChild(cropB);
+    btns.appendChild(delB);
+    head.appendChild(lbl);
+    head.appendChild(btns);
+    const img = document.createElement("img");
+    img.src = URL.createObjectURL(f);
+    page.appendChild(head);
+    page.appendChild(img);
+    stack.appendChild(page);
+  });
+}
+
+function removeScanPage(i) {
+  if (i === state.scanFiles.length - 1) {
+    state.scanFile = null;
+    state.scanOcrFile = null;
+    state.scanTextReady = false;
+  }
+  state.scanFiles.splice(i, 1);
+  renderScanStack();
+}
+
+let cropState = { index: -1, scaleX: 1, scaleY: 1 };
+
+function openCrop(i) {
+  cropState.index = i;
+  const f = state.scanFiles[i];
+  if (!f) return;
+  const img = document.getElementById("cropImage");
+  const rect = document.getElementById("cropRect");
+  img.onload = () => {
+    const stage = document.getElementById("cropStage");
+    const sw = stage.clientWidth;
+    const dispH = img.clientHeight || (sw * img.naturalHeight / img.naturalWidth);
+    cropState.scaleX = img.naturalWidth / sw;
+    cropState.scaleY = img.naturalHeight / dispH;
+    const m = 24;
+    rect.style.left = m + "px";
+    rect.style.top = m + "px";
+    rect.style.width = Math.max(40, sw - m * 2) + "px";
+    rect.style.height = Math.max(40, dispH - m * 2) + "px";
+    rect.style.display = "block";
+  };
+  img.src = URL.createObjectURL(f);
+  document.getElementById("cropModal").hidden = false;
+}
+
+function closeCrop() {
+  document.getElementById("cropModal").hidden = true;
+  document.getElementById("cropRect").style.display = "none";
+  document.getElementById("cropImage").removeAttribute("src");
+  cropState.index = -1;
+}
+
+function confirmCrop() {
+  const i = cropState.index;
+  if (i < 0) return;
+  const rect = document.getElementById("cropRect");
+  const img = document.getElementById("cropImage");
+  const x = parseFloat(rect.style.left) * cropState.scaleX;
+  const y = parseFloat(rect.style.top) * cropState.scaleY;
+  const w = parseFloat(rect.style.width) * cropState.scaleX;
+  const h = parseFloat(rect.style.height) * cropState.scaleY;
+  const cv = document.createElement("canvas");
+  cv.width = Math.round(w);
+  cv.height = Math.round(h);
+  cv.getContext("2d").drawImage(img, x, y, w, h, 0, 0, cv.width, cv.height);
+  cv.toBlob(async (blob) => {
+    blob.name = (state.scanFiles[i] && state.scanFiles[i].name) || "crop.png";
+    state.scanFiles[i] = blob;
+    if (i === state.scanFiles.length - 1) {
+      state.scanFile = blob;
+      state.scanOcrFile = blob;
+    }
+    closeCrop();
+    renderScanStack();
+    toast("Gorsel kirpildi");
+  }, "image/png");
+}
+
+let cropDrag = null;
+
+function cropPos(e) {
+  const r = document.getElementById("cropStage").getBoundingClientRect();
+  return { x: e.clientX - r.left, y: e.clientY - r.top };
+}
+
+document.getElementById("cropRect").addEventListener("pointerdown", (e) => {
+  e.preventDefault();
+  const rect = document.getElementById("cropRect");
+  const rr = rect.getBoundingClientRect();
+  const p = { x: e.clientX - rr.left, y: e.clientY - rr.top };
+  const d = 22;
+  const near = (v, t) => Math.abs(v - t) <= d;
+  let mode = "move";
+  if (near(p.x, 0) && near(p.y, 0)) mode = "nw";
+  else if (near(p.x, rr.width) && near(p.y, 0)) mode = "ne";
+  else if (near(p.x, 0) && near(p.y, rr.height)) mode = "sw";
+  else if (near(p.x, rr.width) && near(p.y, rr.height)) mode = "se";
+  cropDrag = {
+    mode,
+    startX: p.x,
+    startY: p.y,
+    startL: parseFloat(rect.style.left),
+    startT: parseFloat(rect.style.top),
+    startW: parseFloat(rect.style.width),
+    startH: parseFloat(rect.style.height),
+  };
+  document.getElementById("cropStage").setPointerCapture(e.pointerId);
+});
+
+document.getElementById("cropStage").addEventListener("pointermove", (e) => {
+  if (!cropDrag) return;
+  e.preventDefault();
+  const p = cropPos(e);
+  const dd = cropDrag;
+  const stage = document.getElementById("cropStage");
+  const rect = document.getElementById("cropRect");
+  const maxW = stage.clientWidth;
+  const maxH = stage.clientHeight;
+  const min = 40;
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  const dx = p.x - dd.startX;
+  const dy = p.y - dd.startY;
+  let l = dd.startL, t = dd.startT, w = dd.startW, h = dd.startH;
+  if (dd.mode === "move") {
+    l = clamp(dd.startL + dx, 0, maxW - w);
+    t = clamp(dd.startT + dy, 0, maxH - h);
+  } else if (dd.mode === "se") {
+    w = clamp(dd.startW + dx, min, maxW - dd.startL);
+    h = clamp(dd.startH + dy, min, maxH - dd.startT);
+  } else if (dd.mode === "nw") {
+    l = clamp(dd.startL + dx, 0, dd.startL + dd.startW - min);
+    t = clamp(dd.startT + dy, 0, dd.startT + dd.startH - min);
+    w = dd.startL + dd.startW - l;
+    h = dd.startT + dd.startH - t;
+  } else if (dd.mode === "ne") {
+    w = clamp(dd.startW + dx, min, maxW - dd.startL);
+    t = clamp(dd.startT + dy, 0, dd.startT + dd.startH - min);
+    h = dd.startT + dd.startH - t;
+  } else if (dd.mode === "sw") {
+    l = clamp(dd.startL + dx, 0, dd.startL + dd.startW - min);
+    w = dd.startL + dd.startW - l;
+    h = clamp(dd.startH + dy, min, maxH - dd.startT);
+  }
+  rect.style.left = l + "px";
+  rect.style.top = t + "px";
+  rect.style.width = w + "px";
+  rect.style.height = h + "px";
+});
+
+function cropEnd() { cropDrag = null; }
+document.getElementById("cropStage").addEventListener("pointerup", cropEnd);
+document.getElementById("cropStage").addEventListener("pointercancel", cropEnd);
+
 document.getElementById("scanInput").addEventListener("change", async (e) => {
   const f = e.target.files[0];
   if (!f) return;
@@ -840,9 +1017,7 @@ document.getElementById("scanInput").addEventListener("change", async (e) => {
   state.scanOcrFile = null;
   state.scanTextReady = false;
   state.scanFiles.push(f);
-  const preview = document.getElementById("scanPreview");
-  preview.src = URL.createObjectURL(f);
-  preview.hidden = false;
+  renderScanStack();
   const prog = document.getElementById("scanProgress");
   prog.hidden = false;
   prog.textContent = "Gorsel isleniyor (" + state.scanFiles.length + ". sayfa)...";
@@ -866,6 +1041,9 @@ document.getElementById("uploadModal").addEventListener("click", (e) => {
 });
 document.getElementById("scanModal").addEventListener("click", (e) => {
   if (e.target.id === "scanModal") closeScan();
+});
+document.getElementById("cropModal").addEventListener("click", (e) => {
+  if (e.target.id === "cropModal") closeCrop();
 });
 document.getElementById("searchModal").addEventListener("click", (e) => {
   if (e.target.id === "searchModal") closeSearch();
@@ -892,7 +1070,7 @@ document.addEventListener("click", (e) => {
   if (!document.getElementById("uploadMenu").hidden && !e.target.closest(".upload-wrap")) closeUploadMenu();
 });
 document.addEventListener("keydown", (e) => {
-  if (e.key === "Escape") { closeViewer(); closeUpload(); closeScan(); closeItemMenu(); closeSearch(); closeMoveModal(); closeNewText(); closeRename(); closeEdit(); closeCatMenu(); closeUploadMenu(); }
+  if (e.key === "Escape") { closeViewer(); closeUpload(); closeScan(); closeCrop(); closeItemMenu(); closeSearch(); closeMoveModal(); closeNewText(); closeRename(); closeEdit(); closeCatMenu(); closeUploadMenu(); }
 });
 
 load();

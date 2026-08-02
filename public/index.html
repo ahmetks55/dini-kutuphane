@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#0f5132" />
   <title>Dini Kutuphane</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%93%96%3C/text%3E%3C/svg%3E" />
-  <link rel="stylesheet" href="styles.css?v=14" />
+  <link rel="stylesheet" href="styles.css?v=15" />
 </head>
 <body>
   <header class="topbar">
@@ -168,9 +168,34 @@
             </div>
           </div>
           <div class="scan-form-side">
-            <img id="scanPreview" class="scan-preview" hidden />
+            <div id="scanStack" class="scan-stack" hidden></div>
             <textarea id="scanText" class="scan-text" rows="12" placeholder="Tanınan metin burada görünecek; hataları düzelttikten sonra Kaydet'e basın." hidden></textarea>
           </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Crop modal -->
+  <div class="modal-overlay" id="cropModal" hidden>
+    <div class="modal">
+      <div class="modal-head">
+        <button class="btn btn-ghost icon-btn" onclick="closeCrop()">✕</button>
+        <div class="modal-title">Görseli Kırp</div>
+        <span></span>
+      </div>
+      <div class="modal-body">
+        <p class="hint">Kutuyu taşıyın, köşelerden boyutlandırın. Dokunarak köşe seçip sürükleyin.</p>
+        <div id="cropStage" class="crop-stage">
+          <img id="cropImage" alt="" />
+          <div id="cropRect" class="crop-rect">
+            <span class="crop-handle crop-ne"></span>
+            <span class="crop-handle crop-sw"></span>
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-primary" onclick="confirmCrop()">✂ Kırp</button>
+          <button class="btn btn-ghost" onclick="closeCrop()">Vazgeç</button>
         </div>
       </div>
     </div>
@@ -219,6 +244,6 @@
 
   <script src="/vendor/mammoth/mammoth.browser.min.js"></script>
   <script src="/vendor/pdfjs/pdf.min.js"></script>
-  <script src="app.js?v=21"></script>
+  <script src="app.js?v=22"></script>
 </body>
 </html>
