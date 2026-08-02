@@ -768,41 +768,14 @@ function downloadCurrent() {
 }
 
 /* ---------------- Init ---------------- */
-function sharpen(ctx, w, h) {
-  const src = ctx.getImageData(0, 0, w, h);
-  const s = src.data;
-  const out = ctx.createImageData(w, h);
-  const o = out.data;
-  const kernel = [0, -1, 0, -1, 5, -1, 0, -1, 0];
-  for (let y = 0; y < h; y++) {
-    for (let x = 0; x < w; x++) {
-      let r = 0;
-      for (let ky = -1; ky <= 1; ky++) {
-        for (let kx = -1; kx <= 1; kx++) {
-          const px = Math.min(w - 1, Math.max(0, x + kx));
-          const py = Math.min(h - 1, Math.max(0, y + ky));
-          const idx = (py * w + px) * 4;
-          r += s[idx] * kernel[(ky + 1) * 3 + (kx + 1)];
-        }
-      }
-      const idx = (y * w + x) * 4;
-      o[idx] = r;
-      o[idx + 1] = r;
-      o[idx + 2] = r;
-      o[idx + 3] = 255;
-    }
-  }
-  ctx.putImageData(out, 0, 0);
-}
-
 function preprocessImage(file) {
   return new Promise((resolve, reject) => {
     const url = URL.createObjectURL(file);
     const img = new Image();
     img.onload = () => {
       URL.revokeObjectURL(url);
-      const MAX = 2400;
-      const scale = Math.min(2, MAX / Math.max(img.width, img.height));
+      const MAX = 2200;
+      const scale = Math.min(1, MAX / Math.max(img.width, img.height));
       const w = Math.round(img.width * scale);
       const h = Math.round(img.height * scale);
       const cv = document.createElement("canvas");
@@ -823,7 +796,6 @@ function preprocessImage(file) {
         d[i + 2] = gray;
       }
       ctx.putImageData(data, 0, 0);
-      if (scale > 1) sharpen(ctx, w, h);
       cv.toBlob((blob) => resolve(blob), "image/png");
     };
     img.onerror = () => {
