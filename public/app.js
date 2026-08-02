@@ -774,7 +774,7 @@ function preprocessImage(file) {
     const img = new Image();
     img.onload = () => {
       URL.revokeObjectURL(url);
-      const MAX = 2200;
+      const MAX = 4000;
       const scale = Math.min(1, MAX / Math.max(img.width, img.height));
       const w = Math.round(img.width * scale);
       const h = Math.round(img.height * scale);
