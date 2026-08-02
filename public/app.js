@@ -7,6 +7,7 @@ const state = {
   scanFile: null,
   scanOcrFile: null,
   scanTextReady: false,
+  scanFiles: [],
   moveItem: null,
   moveRel: "",
 };
@@ -527,6 +528,7 @@ function openScan() {
   state.scanFile = null;
   state.scanOcrFile = null;
   state.scanTextReady = false;
+  state.scanFiles = [];
   document.getElementById("scanTarget").textContent = state.path ? state.path.split("/").join(" › ") : "Ana Kitaplik";
   const d = new Date();
   const stamp = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0") + "-" + String(d.getHours()).padStart(2, "0") + String(d.getMinutes()).padStart(2, "0");
@@ -609,14 +611,14 @@ async function saveScan() {
   try {
     let res;
     if (fmt === "pdf") {
-      if (!state.scanFile) { toast("Once kamera ile gorsel cekin", "error"); return; }
+      if (state.scanFiles.length === 0) { toast("Once kamera ile gorsel cekin", "error"); return; }
       const fd = new FormData();
       fd.append("path", state.scanPath);
       fd.append("name", name);
       fd.append("format", "pdf");
-      fd.append("file", state.scanFile);
+      for (const f of state.scanFiles) fd.append("file", f);
       prog.hidden = false;
-      prog.textContent = "PDF olusturuluyor...";
+      prog.textContent = "PDF olusturuluyor (" + state.scanFiles.length + " sayfa)...";
       res = await fetch("/api/scan", { method: "POST", body: fd });
     } else {
       if (!state.scanTextReady) { toast("Once Tara (Onizleme) butonuna basin", "error"); return; }
@@ -810,12 +812,13 @@ document.getElementById("scanInput").addEventListener("change", async (e) => {
   state.scanFile = f;
   state.scanOcrFile = null;
   state.scanTextReady = false;
+  state.scanFiles.push(f);
   const preview = document.getElementById("scanPreview");
   preview.src = URL.createObjectURL(f);
   preview.hidden = false;
   const prog = document.getElementById("scanProgress");
   prog.hidden = false;
-  prog.textContent = "Gorsel isleniyor...";
+  prog.textContent = "Gorsel isleniyor (" + state.scanFiles.length + ". sayfa)...";
   try {
     state.scanOcrFile = await preprocessImage(f);
     prog.hidden = true;

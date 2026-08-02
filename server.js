@@ -284,21 +284,23 @@ const scanUpload = multer({
   limits: { fileSize: 30 * 1024 * 1024 },
 });
 
-async function imageToPdf(imagePath, pdfPath) {
-  const ext = path.extname(imagePath).toLowerCase();
-  const bytes = fs.readFileSync(imagePath);
+async function imageToPdf(imagePaths, pdfPath) {
   const pdfDoc = await PDFDocument.create();
-  const img = ext === ".png" ? await pdfDoc.embedPng(bytes) : await pdfDoc.embedJpg(bytes);
   const pageW = 595.28;
   const pageH = 841.89;
-  const page = pdfDoc.addPage([pageW, pageH]);
   const margin = 40;
   const maxW = pageW - margin * 2;
   const maxH = pageH - margin * 2;
-  const scale = Math.min(maxW / img.width, maxH / img.height);
-  const w = img.width * scale;
-  const h = img.height * scale;
-  page.drawImage(img, { x: (pageW - w) / 2, y: (pageH - h) / 2, width: w, height: h });
+  for (const imagePath of imagePaths) {
+    const ext = path.extname(imagePath).toLowerCase();
+    const bytes = fs.readFileSync(imagePath);
+    const img = ext === ".png" ? await pdfDoc.embedPng(bytes) : await pdfDoc.embedJpg(bytes);
+    const page = pdfDoc.addPage([pageW, pageH]);
+    const scale = Math.min(maxW / img.width, maxH / img.height);
+    const w = img.width * scale;
+    const h = img.height * scale;
+    page.drawImage(img, { x: (pageW - w) / 2, y: (pageH - h) / 2, width: w, height: h });
+  }
   fs.writeFileSync(pdfPath, await pdfDoc.save());
 }
 
@@ -338,17 +340,19 @@ function tempImage(file) {
   return tmp;
 }
 
-app.post("/api/scan", scanUpload.single("file"), async (req, res) => {
-  let tmp = null;
+app.post("/api/scan", scanUpload.array("file", 20), async (req, res) => {
+  const tmps = [];
   try {
     const body = req.body || {};
     const { path: rel, name, format, lang, mode, content } = body;
     const fmt = ["pdf", "docx", "txt"].includes(format) ? format : "txt";
+    const files = req.files || [];
 
     if (mode === "preview") {
-      if (!req.file) return res.status(400).json({ error: "Gorsel secilmedi" });
+      if (!files[0]) return res.status(400).json({ error: "Gorsel secilmedi" });
       const ocrLang = SCAN_LANGS.includes(lang) ? lang : "tur";
-      tmp = tempImage(req.file);
+      const tmp = tempImage(files[0]);
+      tmps.push(tmp);
       const text = await ocrText(tmp, ocrLang);
       return res.json({ ok: true, text });
     }
@@ -359,23 +363,26 @@ app.post("/api/scan", scanUpload.single("file"), async (req, res) => {
     if (fs.existsSync(target)) return res.status(409).json({ error: "Bu isimde bir dosya zaten var" });
 
     if (fmt === "pdf") {
-      if (!req.file) return res.status(400).json({ error: "Gorsel secilmedi" });
-      tmp = tempImage(req.file);
-      await imageToPdf(tmp, target);
+      if (files.length === 0) return res.status(400).json({ error: "Gorsel secilmedi" });
+      for (const f of files) tmps.push(tempImage(f));
+      await imageToPdf(tmps, target);
     } else if (content != null && String(content).length > 0) {
       await writeTextDoc(target, String(content), fmt);
     } else {
-      if (!req.file) return res.status(400).json({ error: "Gorsel secilmedi" });
+      if (!files[0]) return res.status(400).json({ error: "Gorsel secilmedi" });
       const ocrLang = SCAN_LANGS.includes(lang) ? lang : "tur";
-      tmp = tempImage(req.file);
+      const tmp = tempImage(files[0]);
+      tmps.push(tmp);
       await writeTextDoc(target, await ocrText(tmp, ocrLang), fmt);
     }
     res.json({ ok: true, name: path.basename(target) });
   } catch (e) {
     res.status(400).json({ error: e.message });
   } finally {
-    if (tmp && fs.existsSync(tmp)) {
-      try { fs.unlinkSync(tmp); } catch {}
+    for (const t of tmps) {
+      if (t && fs.existsSync(t)) {
+        try { fs.unlinkSync(t); } catch {}
+      }
     }
   }
 });
