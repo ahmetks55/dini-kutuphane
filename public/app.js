@@ -582,9 +582,11 @@ async function runScanOcr() {
     if (res.ok) {
       state.scanTextReady = true;
       const ta = document.getElementById("scanText");
-      ta.value = data.text || "";
+      const prev = ta.value.trim();
+      const add = (data.text || "").trim();
+      ta.value = prev ? prev + "\n\n" + add : add;
       ta.hidden = false;
-      prog.textContent = "Metin tanindi. Hatalari duzenleyip Kaydet'e basin.";
+      prog.textContent = "Metin tanindi ve alttakine eklendi. Baska sayfa icin tekrar cekip onizleyin, sonra Kaydet'e basin.";
     } else {
       toast(data.error || "Tarama basarisiz", "error");
       prog.hidden = true;

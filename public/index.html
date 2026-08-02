@@ -146,7 +146,7 @@
             <button class="btn btn-primary scan-capture-btn" onclick="document.getElementById('scanInput').click()">📷 Kamera ile Çek</button>
             <input type="file" id="scanInput" accept="image/*" capture="environment" hidden />
             <input type="text" id="scanName" placeholder="Dosya adı (ör. Tarama-1)" />
-            <p class="hint small" id="scanOcrHint" hidden>Önce "Tara (Önizleme)" ile metni tanıtın, hataları düzelttikten sonra "Kaydet"e basın. PDF formatında doğrudan kaydedilir.</p>
+            <p class="hint small" id="scanOcrHint" hidden>Önce "Tara (Önizleme)" ile metni tanıtın. Başka sayfa için tekrar "Kamera ile Çek" deyip yine önizleyin — metin alttakine eklenir. Sonra "Kaydet"e basın. PDF formatında doğrudan kaydedilir.</p>
             <div class="format-row">
               <label><input type="radio" name="sfmt" value="pdf" /> PDF (.pdf)</label>
               <label><input type="radio" name="sfmt" value="docx" checked /> Word (.docx)</label>
@@ -218,6 +218,6 @@
   </div>
 
   <script src="/vendor/mammoth/mammoth.browser.min.js"></script>
-  <script src="app.js?v=14"></script>
+  <script src="app.js?v=15"></script>
 </body>
 </html>
