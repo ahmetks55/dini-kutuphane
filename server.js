@@ -23,6 +23,10 @@ app.use(
   "/vendor/mammoth/mammoth.browser.min.js",
   express.static(path.join(__dirname, "node_modules", "mammoth", "mammoth.browser.min.js"))
 );
+app.use(
+  "/vendor/pdfjs",
+  express.static(path.join(__dirname, "node_modules", "pdfjs-dist", "build"))
+);
 
 const MIME = {
   ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",

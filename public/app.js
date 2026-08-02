@@ -710,11 +710,38 @@ function openFile(item, rel) {
   if ([".png", ".jpg", ".jpeg", ".gif", ".webp", ".bmp"].includes(ext)) {
     body.innerHTML = `<img src="${fileUrl(rel)}" alt="${esc(item.name)}" />`;
   } else if (ext === ".pdf") {
-    body.innerHTML = `<iframe src="${fileUrl(rel)}"></iframe>`;
+    viewPdf(rel);
   } else if (ext === ".docx") {
     viewDocx(rel);
   } else {
     body.innerHTML = `<iframe src="${fileUrl(rel)}"></iframe>`;
+  }
+}
+
+async function viewPdf(rel) {
+  const body = document.getElementById("viewerBody");
+  try {
+    if (typeof pdfjsLib === "undefined") throw new Error("PDF kutuphanesi yuklenmedi");
+    pdfjsLib.GlobalWorkerOptions.workerSrc = "/vendor/pdfjs/pdf.worker.min.js";
+    const res = await fetch(fileUrl(rel));
+    const buf = await res.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
+    body.innerHTML = '<div class="pdf-body"></div>';
+    const wrap = body.querySelector(".pdf-body");
+    const pages = await Promise.all(
+      Array.from({ length: pdf.numPages }, (_, i) => pdf.getPage(i + 1))
+    );
+    for (const page of pages) {
+      const vp = page.getViewport({ scale: 1.5 });
+      const canvas = document.createElement("canvas");
+      canvas.width = vp.width;
+      canvas.height = vp.height;
+      wrap.appendChild(canvas);
+      const ctx = canvas.getContext("2d");
+      await page.render({ canvasContext: ctx, viewport: vp }).promise;
+    }
+  } catch (e) {
+    body.innerHTML = '<div class="pdf-body"><p class="viewer-loading">PDF goruntulenemedi. <a class="btn btn-primary" href="' + fileUrl(rel) + '" download>Indir</a></p></div>';
   }
 }
 
