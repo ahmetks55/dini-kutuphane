@@ -310,6 +310,7 @@ async function ocrText(imagePath, lang) {
     await worker.setParameters({
       tessedit_pageseg_mode: PSM.AUTO,
       preserve_interword_spaces: "1",
+      user_defined_dpi: "300",
     });
     const { data } = await worker.recognize(imagePath);
     return data.text;

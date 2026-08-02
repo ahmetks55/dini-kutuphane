@@ -768,12 +768,12 @@ function downloadCurrent() {
 }
 
 /* ---------------- Init ---------------- */
-function sharpen(ctx, w, h, amount) {
+function sharpen(ctx, w, h) {
   const src = ctx.getImageData(0, 0, w, h);
   const s = src.data;
   const out = ctx.createImageData(w, h);
   const o = out.data;
-  const kernel = [0, -1, 0, -1, 4 + amount, -1, 0, -1, 0];
+  const kernel = [0, -1, 0, -1, 5, -1, 0, -1, 0];
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
       let r = 0;
@@ -801,8 +801,8 @@ function preprocessImage(file) {
     const img = new Image();
     img.onload = () => {
       URL.revokeObjectURL(url);
-      const MAX = 3200;
-      const scale = Math.min(3, MAX / Math.max(img.width, img.height));
+      const MAX = 2400;
+      const scale = Math.min(2, MAX / Math.max(img.width, img.height));
       const w = Math.round(img.width * scale);
       const h = Math.round(img.height * scale);
       const cv = document.createElement("canvas");
@@ -823,7 +823,7 @@ function preprocessImage(file) {
         d[i + 2] = gray;
       }
       ctx.putImageData(data, 0, 0);
-      if (scale > 1) sharpen(ctx, w, h, 0.6);
+      if (scale > 1) sharpen(ctx, w, h);
       cv.toBlob((blob) => resolve(blob), "image/png");
     };
     img.onerror = () => {
