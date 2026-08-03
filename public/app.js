@@ -410,7 +410,13 @@ async function doMove() {
 let homeArmed = false;
 function armHome() {
   if (homeArmed) return;
-  if (location.hash !== "#/") return;
+  const raw = decodeURIComponent(location.hash.replace(/^#/, ""));
+  if (raw && raw !== "/") return;
+  if (history.state && history.state.__guard) {
+    history.pushState(null, "", "#/");
+    homeArmed = true;
+    return;
+  }
   history.replaceState({ __guard: true }, "", "#/");
   history.pushState(null, "", "#/");
   homeArmed = true;
@@ -471,8 +477,6 @@ window.addEventListener("popstate", () => {
       return;
     }
     homeArmed = false;
-    history.replaceState({ __guard: true }, "", "#/");
-    history.pushState(null, "", "#/");
     state.path = "";
     load();
   }
@@ -1118,6 +1122,6 @@ document.addEventListener("keydown", (e) => {
   if (e.key === "Escape") { closeViewer(); closeUpload(); closeScan(); closeCrop(); closeItemMenu(); closeSearch(); closeMoveModal(); closeNewText(); closeRename(); closeEdit(); closeCatMenu(); closeUploadMenu(); }
 });
 
-if (!location.hash) history.replaceState(null, "", "#/");
+if (!location.hash || location.hash === "#") history.replaceState(null, "", "#/");
 armHome();
 load();
