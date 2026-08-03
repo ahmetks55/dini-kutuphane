@@ -54,6 +54,8 @@ function compareNames(a, b) {
   return a.name.localeCompare(b.name, "tr", { sensitivity: "base" });
 }
 
+const TEXT_EXTS = new Set([".txt", ".md"]);
+
 function listTree(dir) {
   const entries = fs.readdirSync(dir, { withFileTypes: true }).sort((a, b) => {
     if (a.isDirectory() !== b.isDirectory()) return a.isDirectory() ? -1 : 1;
@@ -106,9 +108,23 @@ function searchTree(dir, q) {
     if (e.isDirectory()) {
       if (e.name.toLowerCase().includes(lower)) out.push({ name: e.name, type: "folder", rel });
       out.push(...searchTree(full, q));
-    } else if (e.name.toLowerCase().includes(lower)) {
+    } else {
       const st = fs.statSync(full);
-      out.push({ name: e.name, type: "file", rel, ext: path.extname(e.name).toLowerCase(), size: st.size });
+      const ext = path.extname(e.name).toLowerCase();
+      const nameMatch = e.name.toLowerCase().includes(lower);
+      if (nameMatch) {
+        out.push({ name: e.name, type: "file", rel, ext, size: st.size });
+      } else if (TEXT_EXTS.has(ext) && st.size < 3 * 1024 * 1024) {
+        try {
+          const content = fs.readFileSync(full, "utf8");
+          const idx = content.toLowerCase().indexOf(lower);
+          if (idx >= 0) {
+            const start = Math.max(0, idx - 45);
+            const snippet = content.slice(start, idx + lower.length + 70).replace(/\s+/g, " ").trim();
+            out.push({ name: e.name, type: "file", rel, ext, size: st.size, snippet });
+          }
+        } catch (_) {}
+      }
     }
   }
   return out;

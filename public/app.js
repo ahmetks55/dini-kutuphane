@@ -679,7 +679,7 @@ async function runSearch() {
       const parent = it.rel.split("/").slice(0, -1).join("/");
       row.innerHTML = `<span class="sr-icon">${it.type === "folder" ? "📁" : iconFor(it)}</span>
         <span class="sr-main"><span class="sr-name">${esc(it.name)}</span>
-        <span class="sr-path">${esc(parent || "Ana Kitaplik")}</span></span>`;
+        <span class="sr-path">${esc(parent || "Ana Kitaplik")}</span>${it.snippet ? `<span class="sr-snippet">…${esc(it.snippet)}…</span>` : ""}</span>`;
       row.onclick = () => {
         closeSearch();
         if (it.type === "folder") openFolder(it.rel);

@@ -288,14 +288,37 @@ html, body {
 }
 
 /* ---------- Search ---------- */
+.search-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 2px solid var(--green);
+  border-radius: 12px;
+  background: #fff;
+  padding: 0 12px;
+  box-shadow: var(--shadow);
+}
+.search-input-icon { font-size: 18px; flex-shrink: 0; }
+.search-input-wrap input {
+  flex: 1;
+  border: none;
+  outline: none;
+  padding: 12px 0;
+  font-size: 16px;
+  font-family: inherit;
+  background: transparent;
+  color: var(--text);
+  min-width: 0;
+}
 .search-results {
   max-height: 55vh;
   overflow-y: auto;
   margin-top: 10px;
+  -webkit-overflow-scrolling: touch;
 }
 .search-result {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 10px;
   width: 100%;
   text-align: left;
@@ -310,10 +333,11 @@ html, body {
   font-family: inherit;
 }
 .search-result:hover { background: var(--green-light); border-color: #c3d8cb; }
-.sr-icon { font-size: 20px; flex-shrink: 0; }
+.sr-icon { font-size: 20px; flex-shrink: 0; margin-top: 1px; }
 .sr-main { display: flex; flex-direction: column; min-width: 0; }
 .sr-name { font-weight: 600; }
 .sr-path { font-size: 12px; color: var(--muted); }
+.sr-snippet { font-size: 12px; color: var(--text); background: var(--gold-light); border-radius: 6px; padding: 2px 6px; margin-top: 4px; line-height: 1.4; }
 .search-loading { color: var(--muted); text-align: center; padding: 20px; }
 
 /* ---------- Modal ---------- */
@@ -651,4 +675,10 @@ html, body {
   .viewer-body { padding: 12px; }
   .modal.viewer { height: 96vh; }
   .item .more { opacity: 1; }
+  #searchModal .modal { max-width: 100%; width: 100%; max-height: 100vh; height: 100vh; border-radius: 0; display: flex; flex-direction: column; }
+  #searchModal .modal-head { flex: 0 0 auto; }
+  #searchModal .modal-body { flex: 1; min-height: 0; display: flex; flex-direction: column; padding: 12px; }
+  #searchModal .search-results { flex: 1; max-height: none; }
+  #searchModal .search-input-wrap { padding: 2px 12px; }
+  #searchModal .search-input-wrap input { padding: 12px 0; font-size: 17px; }
 }
