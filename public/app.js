@@ -779,6 +779,7 @@ async function viewDocx(rel) {
         p.classList.add("section");
       }
     });
+    groupDocArabic(body);
   } catch (e) {
     body.innerHTML = '<p class="viewer-loading">Dokuman goruntulenemedi. Indirerek acabilirsiniz.</p>';
   }
@@ -800,6 +801,20 @@ function beautifyArabic(container) {
       if (OTT_RE.test(text)) el.classList.add("ott");
     }
   });
+}
+
+function groupDocArabic(container) {
+  const doc = container.querySelector(".doc-body");
+  if (!doc) return;
+  const top = document.createElement("div");
+  top.className = "doc-ar";
+  const bottom = document.createElement("div");
+  bottom.className = "doc-tr";
+  Array.from(doc.children).forEach((el) => {
+    (el.classList && el.classList.contains("ar") ? top : bottom).appendChild(el);
+  });
+  doc.appendChild(top);
+  doc.appendChild(bottom);
 }
 
 function closeViewer() {
