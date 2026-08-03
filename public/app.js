@@ -437,21 +437,6 @@ function exitApp() {
   setTimeout(() => { window.location.replace("about:blank"); }, 150);
 }
 
-window.addEventListener("popstate", () => {
-  const openModal = Array.from(document.querySelectorAll(".modal-overlay")).find((m) => !m.hidden);
-  if (openModal && openModal.id !== "viewerModal") {
-    const id = openModal.id;
-    if (id === "searchModal") closeSearch();
-    else if (id === "uploadModal") closeUpload();
-    else if (id === "scanModal") closeScan();
-    else if (id === "cropModal") closeCrop();
-    else if (id === "moveModal") closeMoveModal();
-    else if (id === "newTextModal") closeNewText();
-    else if (id === "renameModal") closeRename();
-    else if (id === "editModal") closeEdit();
-  }
-  history.forward();
-});
 async function deleteItem(it, rel) {
   if (!confirm(`"${it.name}" silinsin mi?\nBu islem geri alinamaz.`)) return;
   const res = await fetch("/api/item?path=" + encodeURIComponent(rel), { method: "DELETE" });
@@ -807,7 +792,7 @@ function closeViewer() {
   document.getElementById("viewerModal").hidden = true;
   document.body.style.overflow = "";
   document.getElementById("viewerBody").innerHTML = "";
-  if (location.hash.includes(":f=")) history.back();
+  if (location.hash.includes(":f=")) history.replaceState(null, "", "#/" + state.path);
 }
 function downloadCurrent() {
   if (viewingRel) window.open("/api/download?path=" + encodeURIComponent(viewingRel), "_blank");
@@ -1092,10 +1077,4 @@ document.addEventListener("keydown", (e) => {
   if (e.key === "Escape") { closeViewer(); closeUpload(); closeScan(); closeCrop(); closeItemMenu(); closeSearch(); closeMoveModal(); closeNewText(); closeRename(); closeEdit(); closeCatMenu(); closeUploadMenu(); }
 });
 
-const _hash = decodeURIComponent(location.hash.replace(/^#/, ""));
-if (!_hash || _hash === "/") {
-  if (!location.hash || location.hash === "#") history.replaceState(null, "", "#/");
-  history.replaceState(null, "", "#/");
-  history.pushState(null, "", "#/");
-}
 load();
