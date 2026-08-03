@@ -118,6 +118,7 @@ function renderGrid() {
 
   if (!state.path) {
     document.getElementById("itemCount").textContent = state.items.length + " ogeler";
+    armHome();
     renderHome();
     return;
   }
@@ -407,6 +408,14 @@ async function doMove() {
 }
 
 /* ---------------- Navigation ---------------- */
+let homeArmed = false;
+function armHome() {
+  if (homeArmed) return;
+  if (location.hash !== "#/") return;
+  history.replaceState({ __guard: true }, "", "#/");
+  history.pushState(null, "", "#/");
+  homeArmed = true;
+}
 function go(p) {
   const h = p ? "/" + p : "/";
   if (location.hash === "#" + h) {
@@ -429,6 +438,34 @@ window.addEventListener("hashchange", () => {
     }
   } else {
     closeViewer();
+    load();
+  }
+});
+window.addEventListener("popstate", () => {
+  const openModal = Array.from(document.querySelectorAll(".modal-overlay")).find((m) => !m.hidden);
+  if (openModal && openModal.id !== "viewerModal") {
+    const id = openModal.id;
+    if (id === "searchModal") closeSearch();
+    else if (id === "uploadModal") closeUpload();
+    else if (id === "scanModal") closeScan();
+    else if (id === "cropModal") closeCrop();
+    else if (id === "moveModal") closeMoveModal();
+    else if (id === "newTextModal") closeNewText();
+    else if (id === "renameModal") closeRename();
+    else if (id === "editModal") closeEdit();
+    history.forward();
+    return;
+  }
+  const raw = decodeURIComponent(location.hash.replace(/^#/, ""));
+  const [pathPart] = raw.split(":f=");
+  if (pathPart && pathPart !== "/") return;
+  if (history.state && history.state.__guard) {
+    if (confirm("Uygulamadan çıkmak istediğinize emin misiniz?")) {
+      history.back();
+      return;
+    }
+    history.pushState(null, "", "#/");
+    state.path = "";
     load();
   }
 });
@@ -1073,4 +1110,6 @@ document.addEventListener("keydown", (e) => {
   if (e.key === "Escape") { closeViewer(); closeUpload(); closeScan(); closeCrop(); closeItemMenu(); closeSearch(); closeMoveModal(); closeNewText(); closeRename(); closeEdit(); closeCatMenu(); closeUploadMenu(); }
 });
 
+if (!location.hash) history.replaceState(null, "", "#/");
+armHome();
 load();
