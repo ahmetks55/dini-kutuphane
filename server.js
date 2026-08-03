@@ -18,6 +18,11 @@ if (!fs.existsSync(OCR_CACHE)) fs.mkdirSync(OCR_CACHE, { recursive: true });
 const app = express();
 app.use(express.json());
 
+app.get("/sw.js", (req, res) => {
+  res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+  res.sendFile(path.join(__dirname, "public", "sw.js"));
+});
+
 app.use(express.static(path.join(__dirname, "public")));
 app.use(
   "/vendor/mammoth/mammoth.browser.min.js",
