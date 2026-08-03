@@ -431,7 +431,12 @@ window.addEventListener("hashchange", () => {
     load();
   }
 });
-let leaving = false;
+function exitApp() {
+  if (!confirm("Uygulamadan çıkmak istediğinize emin misiniz?")) return;
+  try { window.close(); } catch (e) {}
+  setTimeout(() => { window.location.replace("about:blank"); }, 150);
+}
+
 window.addEventListener("popstate", () => {
   const openModal = Array.from(document.querySelectorAll(".modal-overlay")).find((m) => !m.hidden);
   if (openModal && openModal.id !== "viewerModal") {
@@ -444,28 +449,9 @@ window.addEventListener("popstate", () => {
     else if (id === "newTextModal") closeNewText();
     else if (id === "renameModal") closeRename();
     else if (id === "editModal") closeEdit();
-    history.forward();
-    return;
   }
-  const raw = decodeURIComponent(location.hash.replace(/^#/, ""));
-  if (!raw || raw === "/") {
-    if (history.state && history.state.home) {
-      if (leaving || confirm("Uygulamadan çıkmak istediğinize emin misiniz?")) {
-        leaving = true;
-        history.back();
-      } else {
-        history.forward();
-      }
-      return;
-    }
-    if (leaving) {
-      history.back();
-      return;
-    }
-  }
-  leaving = false;
+  history.forward();
 });
-
 async function deleteItem(it, rel) {
   if (!confirm(`"${it.name}" silinsin mi?\nBu islem geri alinamaz.`)) return;
   const res = await fetch("/api/item?path=" + encodeURIComponent(rel), { method: "DELETE" });
@@ -1107,10 +1093,9 @@ document.addEventListener("keydown", (e) => {
 });
 
 const _hash = decodeURIComponent(location.hash.replace(/^#/, ""));
-if (!location.hash || location.hash === "#") history.replaceState(null, "", "#/");
-if ((!_hash || _hash === "/") && !sessionStorage.getItem("homeGuard")) {
-  history.replaceState({ home: true }, "", "#/");
+if (!_hash || _hash === "/") {
+  if (!location.hash || location.hash === "#") history.replaceState(null, "", "#/");
+  history.replaceState(null, "", "#/");
   history.pushState(null, "", "#/");
-  sessionStorage.setItem("homeGuard", "1");
 }
 load();
