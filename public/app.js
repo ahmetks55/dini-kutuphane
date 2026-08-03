@@ -1095,6 +1095,14 @@ if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     navigator.serviceWorker.register("sw.js").catch(() => {});
   });
+  function autoPrecache() {
+    if (!navigator.onLine) return;
+    navigator.serviceWorker.ready.then((reg) => {
+      if (reg.active) reg.active.postMessage({ type: "PRECACHE_ALL" });
+    });
+  }
+  window.addEventListener("load", autoPrecache);
+  window.addEventListener("online", autoPrecache);
   navigator.serviceWorker.addEventListener("message", (e) => {
     const d = e.data;
     if (!d) return;
@@ -1102,10 +1110,10 @@ if ("serviceWorker" in navigator) {
     if (d.type === "PRECACHE_PROGRESS") {
       const p = d.total ? Math.round((d.done / d.total) * 100) : 0;
       if (btn) btn.textContent = "⬇ Onbellek " + p + "%";
-      toast("Onbellekleniyor: " + d.done + "/" + d.total);
+      if (d.done % 10 === 0 || d.done >= d.total) toast("Onbellekleniyor: " + d.done + "/" + d.total);
     } else if (d.type === "PRECACHE_DONE") {
       if (btn) btn.textContent = "⬇ Tümünü Önbelleğe Al";
-      toast("Tum dosyalar onbellege alindi");
+      if (d.total > 0) toast("Onbellek guncellendi: " + d.total + " dosya hazir");
     }
   });
 }

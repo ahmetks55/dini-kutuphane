@@ -3,7 +3,7 @@ const CORE = [
   "./",
   "./index.html",
   "./styles.css?v=23",
-  "./app.js?v=36",
+  "./app.js?v=37",
   "./manifest.json",
   "./icon.svg",
   "./fonts/AmiriQuran-Regular.ttf",
@@ -30,52 +30,68 @@ self.addEventListener("activate", (e) => {
   );
 });
 
+let precaching = false;
+
 async function precacheAll(client) {
+  if (precaching) return;
+  precaching = true;
   const cache = await caches.open(CACHE);
   const report = (done, total) => {
     if (client) client.postMessage({ type: "PRECACHE_PROGRESS", done, total });
   };
   const files = [];
 
-  async function walk(rel) {
-    const url = "/api/tree?path=" + encodeURIComponent(rel);
-    const res = await fetch(url);
-    if (res.ok) await cache.put(url, res.clone());
-    const data = await res.clone().json();
-    for (const item of data.items || []) {
-      const childRel = rel ? rel + "/" + item.name : item.name;
-      if (item.type === "folder") await walk(childRel);
-      else files.push(childRel);
+  try {
+    async function walk(rel) {
+      const url = "/api/tree?path=" + encodeURIComponent(rel);
+      let data;
+      const cachedTree = await cache.match(url);
+      if (cachedTree) {
+        data = await cachedTree.json();
+      } else {
+        const res = await fetch(url);
+        if (res.ok) await cache.put(url, res.clone());
+        data = await res.clone().json();
+      }
+      for (const item of data.items || []) {
+        const childRel = rel ? rel + "/" + item.name : item.name;
+        if (item.type === "folder") await walk(childRel);
+        else files.push(childRel);
+      }
     }
-  }
 
-  report(0, 1);
-  await walk("");
-  const total = files.length;
-  report(0, total);
-  if (total === 0) {
-    if (client) client.postMessage({ type: "PRECACHE_DONE", total: 0 });
-    return;
-  }
-
-  let idx = 0;
-  let done = 0;
-  async function worker() {
-    while (idx < total) {
-      const rel = files[idx++];
-      const ext = rel.split(".").pop().toLowerCase();
-      const isText = ext === "txt" || ext === "md";
-      const url = (isText ? "/api/read?path=" : "/api/file?path=") + encodeURIComponent(rel);
-      try {
-        const r = await fetch(url);
-        if (r.ok) await cache.put(url, r);
-      } catch (_) {}
-      done++;
-      report(done, total);
+    report(0, 1);
+    await walk("");
+    const total = files.length;
+    report(0, total);
+    if (total === 0) {
+      if (client) client.postMessage({ type: "PRECACHE_DONE", total: 0 });
+      return;
     }
+
+    let idx = 0;
+    let done = 0;
+    async function worker() {
+      while (idx < total) {
+        const rel = files[idx++];
+        const ext = rel.split(".").pop().toLowerCase();
+        const isText = ext === "txt" || ext === "md";
+        const url = (isText ? "/api/read?path=" : "/api/file?path=") + encodeURIComponent(rel);
+        try {
+          if (!(await cache.match(url))) {
+            const r = await fetch(url);
+            if (r.ok) await cache.put(url, r);
+          }
+        } catch (_) {}
+        done++;
+        report(done, total);
+      }
+    }
+    await Promise.all(Array.from({ length: Math.min(6, total) }, () => worker()));
+    if (client) client.postMessage({ type: "PRECACHE_DONE", total });
+  } finally {
+    precaching = false;
   }
-  await Promise.all(Array.from({ length: Math.min(6, total) }, () => worker()));
-  if (client) client.postMessage({ type: "PRECACHE_DONE", total });
 }
 
 self.addEventListener("message", (e) => {
