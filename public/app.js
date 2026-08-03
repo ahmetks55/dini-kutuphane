@@ -712,11 +712,13 @@ async function runSearch() {
 
 /* ---------------- Viewer ---------------- */
 let viewingRel = null;
+let viewingItem = null;
 
 function fileUrl(rel) { return "/api/file?path=" + encodeURIComponent(rel); }
 
 function openFile(item, rel) {
   viewingRel = rel;
+  viewingItem = item;
   document.getElementById("viewerTitle").textContent = item.name;
   const body = document.getElementById("viewerBody");
   body.innerHTML = '<p class="viewer-loading">Yukleniyor...</p>';
@@ -821,10 +823,71 @@ function closeViewer() {
   document.getElementById("viewerModal").hidden = true;
   document.body.style.overflow = "";
   document.getElementById("viewerBody").innerHTML = "";
+  viewingRel = null;
+  viewingItem = null;
+  closeViewerMenu();
   if (location.hash.includes(":f=")) history.replaceState(null, "", "#/" + state.path);
 }
 function downloadCurrent() {
   if (viewingRel) window.open("/api/download?path=" + encodeURIComponent(viewingRel), "_blank");
+}
+
+/* ---------------- Viewer menu (⋮) ---------------- */
+let viewerMenu = null;
+
+function closeViewerMenu() {
+  if (viewerMenu) {
+    viewerMenu.remove();
+    viewerMenu = null;
+  }
+}
+
+function openViewerMenu(e) {
+  e.stopPropagation();
+  if (viewerMenu) { closeViewerMenu(); return; }
+  const menu = document.createElement("div");
+  menu.className = "item-menu viewer-menu";
+
+  const isEditable = viewingItem && viewingItem.type === "file" && /\.(txt|md|docx)$/i.test(viewingItem.name);
+
+  const indir = document.createElement("button");
+  indir.className = "menu-item";
+  indir.textContent = "⬇ İndir";
+  indir.onclick = (ev) => {
+    ev.stopPropagation();
+    closeViewerMenu();
+    downloadCurrent();
+  };
+  menu.appendChild(indir);
+
+  if (isEditable) {
+    const duzenle = document.createElement("button");
+    duzenle.className = "menu-item";
+    duzenle.textContent = "✏️ Düzenle";
+    duzenle.onclick = (ev) => {
+      ev.stopPropagation();
+      closeViewerMenu();
+      openEdit(viewingItem, viewingRel);
+    };
+    menu.appendChild(duzenle);
+  }
+
+  const kapat = document.createElement("button");
+  kapat.className = "menu-item";
+  kapat.textContent = "✕ Kapat";
+  kapat.onclick = (ev) => {
+    ev.stopPropagation();
+    closeViewerMenu();
+    closeViewer();
+  };
+  menu.appendChild(kapat);
+
+  document.body.appendChild(menu);
+  viewerMenu = menu;
+  const r = e.currentTarget.getBoundingClientRect();
+  menu.style.position = "fixed";
+  menu.style.top = r.bottom + 6 + "px";
+  menu.style.right = (window.innerWidth - r.right) + "px";
 }
 
 /* ---------------- Init ---------------- */
@@ -1099,11 +1162,12 @@ document.getElementById("searchInput").addEventListener("keydown", (e) => {
 });
 document.addEventListener("click", (e) => {
   if (activeMenu && !activeMenu.contains(e.target)) closeItemMenu();
+  if (viewerMenu && !viewerMenu.contains(e.target)) closeViewerMenu();
   if (!document.getElementById("catMenu").hidden && !e.target.closest(".topbar") && !e.target.closest("#catMenu")) closeCatMenu();
   if (!document.getElementById("uploadMenu").hidden && !e.target.closest(".upload-wrap")) closeUploadMenu();
 });
 document.addEventListener("keydown", (e) => {
-  if (e.key === "Escape") { closeViewer(); closeUpload(); closeScan(); closeCrop(); closeItemMenu(); closeSearch(); closeMoveModal(); closeNewText(); closeRename(); closeEdit(); closeCatMenu(); closeUploadMenu(); }
+  if (e.key === "Escape") { closeViewer(); closeUpload(); closeScan(); closeCrop(); closeItemMenu(); closeViewerMenu(); closeSearch(); closeMoveModal(); closeNewText(); closeRename(); closeEdit(); closeCatMenu(); closeUploadMenu(); }
 });
 
 if ("serviceWorker" in navigator) {
