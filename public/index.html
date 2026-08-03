@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#0f5132" />
   <title>Dini Kutuphane</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%93%96%3C/text%3E%3C/svg%3E" />
-  <link rel="stylesheet" href="styles.css?v=18" />
+  <link rel="stylesheet" href="styles.css?v=19" />
 </head>
 <body>
   <header class="topbar">
@@ -21,14 +21,14 @@
       </div>
     </div>
     <div class="top-actions">
-      <button class="btn btn-ghost" onclick="openSearch()">🔍 <span class="btn-label">Ara</span></button>
+      <button class="btn btn-ghost" onclick="openSearch()"><span class="b-icon">🔍</span><span class="b-label">Ara</span></button>
       <div class="upload-wrap">
         <button class="btn btn-primary" id="uploadBtn" onclick="toggleUploadMenu()">＋ <span class="btn-label">Yeni</span> <span class="caret">▾</span></button>
         <div class="upload-menu" id="uploadMenu" hidden>
-          <button class="upload-menu-item" onclick="closeUploadMenu(); promptNewFolder()">📁 Klasor Ekle</button>
-          <button class="upload-menu-item" onclick="closeUploadMenu(); openUpload()">📄 Dosya Yükle</button>
-          <button class="upload-menu-item" onclick="closeUploadMenu(); openScan()">📷 Kamera ile Tara</button>
-          <button class="upload-menu-item" onclick="closeUploadMenu(); openNewText()">✏️ Yeni Metin Dosyası</button>
+          <button class="upload-menu-item" onclick="closeUploadMenu(); promptNewFolder()"><span class="b-icon">📁</span><span class="b-label">Klasor Ekle</span></button>
+          <button class="upload-menu-item" onclick="closeUploadMenu(); openUpload()"><span class="b-icon">📄</span><span class="b-label">Dosya Yükle</span></button>
+          <button class="upload-menu-item" onclick="closeUploadMenu(); openScan()"><span class="b-icon">📷</span><span class="b-label">Kamera ile Tara</span></button>
+          <button class="upload-menu-item" onclick="closeUploadMenu(); openNewText()"><span class="b-icon">✏️</span><span class="b-label">Yeni Metin</span></button>
         </div>
       </div>
     </div>
