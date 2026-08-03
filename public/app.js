@@ -432,31 +432,6 @@ window.addEventListener("hashchange", () => {
     load();
   }
 });
-window.addEventListener("popstate", () => {
-  const openModal = Array.from(document.querySelectorAll(".modal-overlay")).find((m) => !m.hidden);
-  if (openModal) {
-    const id = openModal.id;
-    if (id === "viewerModal") { closeViewer(); return; }
-    if (id === "searchModal") closeSearch();
-    else if (id === "uploadModal") closeUpload();
-    else if (id === "scanModal") closeScan();
-    else if (id === "cropModal") closeCrop();
-    else if (id === "moveModal") closeMoveModal();
-    else if (id === "newTextModal") closeNewText();
-    else if (id === "renameModal") closeRename();
-    else if (id === "editModal") closeEdit();
-    history.forward();
-    return;
-  }
-  const raw = decodeURIComponent(location.hash.replace(/^#/, ""));
-  const [pathPart] = raw.split(":f=");
-  if (!pathPart || pathPart === "/") {
-    if (history.state && history.state.__guard) return;
-    history.pushState({ __guard: true }, "", "#/");
-    state.path = "";
-    load();
-  }
-});
 
 async function deleteItem(it, rel) {
   if (!confirm(`"${it.name}" silinsin mi?\nBu islem geri alinamaz.`)) return;
@@ -813,10 +788,7 @@ function closeViewer() {
   document.getElementById("viewerModal").hidden = true;
   document.body.style.overflow = "";
   document.getElementById("viewerBody").innerHTML = "";
-  if (location.hash.includes(":f=")) {
-    const h = state.path ? "/" + state.path : "/";
-    history.replaceState(null, "", "#" + h);
-  }
+  if (location.hash.includes(":f=")) history.back();
 }
 function downloadCurrent() {
   if (viewingRel) window.open("/api/download?path=" + encodeURIComponent(viewingRel), "_blank");
@@ -1060,7 +1032,6 @@ document.getElementById("scanInput").addEventListener("change", async (e) => {
 const initialHash = decodeURIComponent(location.hash.replace(/^#/, ""));
 const initialPath = initialHash.split(":f=")[0].replace(/^\//, "");
 state.path = initialPath;
-if (!location.hash) history.replaceState(null, "", "#/");
 document.querySelectorAll('input[name="sfmt"]').forEach((r) => r.addEventListener("change", toggleScanFormat));
 document.getElementById("viewerModal").addEventListener("click", (e) => {
   if (e.target.id === "viewerModal") closeViewer();
