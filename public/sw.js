@@ -3,7 +3,7 @@ const CORE = [
   "./",
   "./index.html",
   "./styles.css?v=23",
-  "./app.js?v=34",
+  "./app.js?v=36",
   "./manifest.json",
   "./icon.svg",
   "./fonts/AmiriQuran-Regular.ttf",
@@ -28,6 +28,60 @@ self.addEventListener("activate", (e) => {
       .then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k))))
       .then(() => self.clients.claim())
   );
+});
+
+async function precacheAll(client) {
+  const cache = await caches.open(CACHE);
+  const report = (done, total) => {
+    if (client) client.postMessage({ type: "PRECACHE_PROGRESS", done, total });
+  };
+  const files = [];
+
+  async function walk(rel) {
+    const url = "/api/tree?path=" + encodeURIComponent(rel);
+    const res = await fetch(url);
+    if (res.ok) await cache.put(url, res.clone());
+    const data = await res.clone().json();
+    for (const item of data.items || []) {
+      const childRel = rel ? rel + "/" + item.name : item.name;
+      if (item.type === "folder") await walk(childRel);
+      else files.push(childRel);
+    }
+  }
+
+  report(0, 1);
+  await walk("");
+  const total = files.length;
+  report(0, total);
+  if (total === 0) {
+    if (client) client.postMessage({ type: "PRECACHE_DONE", total: 0 });
+    return;
+  }
+
+  let idx = 0;
+  let done = 0;
+  async function worker() {
+    while (idx < total) {
+      const rel = files[idx++];
+      const ext = rel.split(".").pop().toLowerCase();
+      const isText = ext === "txt" || ext === "md";
+      const url = (isText ? "/api/read?path=" : "/api/file?path=") + encodeURIComponent(rel);
+      try {
+        const r = await fetch(url);
+        if (r.ok) await cache.put(url, r);
+      } catch (_) {}
+      done++;
+      report(done, total);
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(6, total) }, () => worker()));
+  if (client) client.postMessage({ type: "PRECACHE_DONE", total });
+}
+
+self.addEventListener("message", (e) => {
+  if (e.data && e.data.type === "PRECACHE_ALL") {
+    e.waitUntil(precacheAll(e.source));
+  }
 });
 
 async function staleWhileRevalidate(req) {

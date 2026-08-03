@@ -48,9 +48,23 @@ function toast(msg, type) {
 }
 
 /* ---------------- Category menu (hamburger) ---------------- */
+function triggerPrecache() {
+  if (!("serviceWorker" in navigator)) { toast("Service worker desteklenmiyor", "error"); return; }
+  if (!confirm("Tum kitaplik dosyalari indirilip cevrimdisi icin onbellege alinacak.\nBu islem veri kullanabilir ve biraz surebilir. Devam edilsin mi?")) return;
+  navigator.serviceWorker.ready.then((reg) => {
+    if (reg.active) reg.active.postMessage({ type: "PRECACHE_ALL" });
+  });
+}
+
 function renderCategories() {
   const menu = document.getElementById("catMenu");
   menu.innerHTML = "";
+  const pc = document.createElement("button");
+  pc.className = "cat-menu-item precache-item";
+  pc.id = "precacheBtn";
+  pc.textContent = "⬇ Tümünü Önbelleğe Al";
+  pc.onclick = () => { closeCatMenu(); triggerPrecache(); };
+  menu.appendChild(pc);
   const chips = [{ name: "", label: "🏠 Ana Kitaplik" }, ...MAIN_CATS.map((c) => ({ name: c, label: (CAT_ICONS[c] || "📁") + " " + c }))];
   chips.forEach((ch) => {
     const b = document.createElement("button");
@@ -1080,6 +1094,19 @@ document.addEventListener("keydown", (e) => {
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     navigator.serviceWorker.register("sw.js").catch(() => {});
+  });
+  navigator.serviceWorker.addEventListener("message", (e) => {
+    const d = e.data;
+    if (!d) return;
+    const btn = document.getElementById("precacheBtn");
+    if (d.type === "PRECACHE_PROGRESS") {
+      const p = d.total ? Math.round((d.done / d.total) * 100) : 0;
+      if (btn) btn.textContent = "⬇ Onbellek " + p + "%";
+      toast("Onbellekleniyor: " + d.done + "/" + d.total);
+    } else if (d.type === "PRECACHE_DONE") {
+      if (btn) btn.textContent = "⬇ Tümünü Önbelleğe Al";
+      toast("Tum dosyalar onbellege alindi");
+    }
   });
 }
 
