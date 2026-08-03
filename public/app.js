@@ -441,6 +441,12 @@ window.addEventListener("hashchange", () => {
     load();
   }
 });
+let exitConfirmed = false;
+window.addEventListener("beforeunload", (e) => {
+  if (exitConfirmed) return;
+  e.preventDefault();
+  e.returnValue = "";
+});
 window.addEventListener("popstate", () => {
   const openModal = Array.from(document.querySelectorAll(".modal-overlay")).find((m) => !m.hidden);
   if (openModal && openModal.id !== "viewerModal") {
@@ -461,9 +467,12 @@ window.addEventListener("popstate", () => {
   if (pathPart && pathPart !== "/") return;
   if (history.state && history.state.__guard) {
     if (confirm("Uygulamadan çıkmak istediğinize emin misiniz?")) {
+      exitConfirmed = true;
       history.back();
       return;
     }
+    homeArmed = false;
+    history.replaceState({ __guard: true }, "", "#/");
     history.pushState(null, "", "#/");
     state.path = "";
     load();
