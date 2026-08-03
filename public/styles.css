@@ -73,7 +73,6 @@ html, body {
 .btn-primary:hover { background: #ddb93c; }
 .btn-ghost { background: rgba(255,255,255,.14); color: #fff; }
 .btn-ghost:hover { background: rgba(255,255,255,.26); }
-.btn-danger { background: var(--danger); color: #fff; }
 .icon-btn { padding: 10px 14px; font-size: 20px; }
 
 /* ---------- Category menu (hamburger) ---------- */
@@ -182,11 +181,6 @@ html, body {
 .item-count { font-size: 13px; color: var(--muted); }
 
 /* ---------- Home cards ---------- */
-.home-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  gap: 12px;
-}
 .home-card {
   background: linear-gradient(150deg, var(--card), var(--green-light));
   border: 1px solid #d4e5da;
@@ -429,8 +423,7 @@ html, body {
   #scanModal .modal-head { flex: 0 0 auto; }
   #scanModal .modal-body { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 12px; display: flex; flex-direction: column; }
   .scan-actions-grid { grid-template-columns: 1fr; min-height: 0; display: flex; flex-direction: column; gap: 10px; }
-  .scan-form-side { min-width: 0; }
-  .scan-stack { order: -1; max-height: none; }
+  .scan-stack { order: -1; }
   .scan-page img { max-height: 30vh; }
 }
 /* Crop modal */
@@ -472,7 +465,6 @@ html, body {
 }
 .crop-rect::before { top: -9px; left: -9px; }
 .crop-rect::after { bottom: -9px; right: -9px; }
-.crop-rect > .crop-handle { width: 18px; height: 18px; }
 .crop-rect > .crop-handle.crop-ne { top: -9px; right: -9px; }
 .crop-rect > .crop-handle.crop-sw { bottom: -9px; left: -9px; }
 #scanName {
@@ -544,10 +536,8 @@ html, body {
 .viewer-body iframe { width: 100%; height: 100%; min-height: 60vh; border: none; }
 .viewer-body img { max-width: 100%; height: auto; display: block; margin: 0 auto; border-radius: 8px; }
 .viewer-body pre { white-space: pre-wrap; font-family: inherit; font-size: 14px; }
-.viewer-body .doc-title { font-size: 20px; color: var(--green-dark); margin-bottom: 10px; }
 .viewer-body p { margin: 0 0 12px; }
 .viewer-body h1, .viewer-body h2, .viewer-body h3 { color: var(--green-dark); margin: 14px 0 8px; }
-.viewer-body .rtl { direction: rtl; text-align: right; font-size: 1.35em; line-height: 2.2; color: #111; }
 .viewer-body p.ar, .viewer-body .ar {
   direction: rtl;
   text-align: right;
@@ -557,12 +547,6 @@ html, body {
   line-height: 2.35;
   color: #101010;
   padding: 4px 2px;
-}
-.viewer-body .ar .ayah-num {
-  font-family: "Amiri Quran", "Scheherazade New", "Traditional Arabic", serif;
-  font-size: 0.85em;
-  vertical-align: middle;
-  color: #0f5132;
 }
 .viewer-body p.ar.ott, .ott-mode p.ar {
   font-family: "Noto Naskh Arabic", "Amiri Quran", "Traditional Arabic", serif;
@@ -668,7 +652,7 @@ html, body {
   .caret { display: none; }
   .btn, .icon-btn { padding: 9px 12px; font-size: 16px; }
   .cat-menu { left: 8px; right: 8px; max-width: none; }
-  .grid, .home-grid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; }
+  .grid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; }
   .item .thumb { height: 78px; font-size: 36px; }
   .folder-title { font-size: 19px; }
   .container { padding: 12px 12px 132px; }

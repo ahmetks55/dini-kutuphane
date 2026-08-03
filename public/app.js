@@ -1,7 +1,6 @@
 const state = {
   path: "",
   items: [],
-  currentFile: null,
   uploadPath: "",
   scanPath: "",
   scanFile: null,
