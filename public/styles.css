@@ -9,6 +9,7 @@
   --text: #1c2b24;
   --muted: #6b7c72;
   --danger: #b3261e;
+  --border: #dbe3dd;
   --radius: 14px;
   --shadow: 0 2px 10px rgba(15, 81, 50, 0.12);
 }
@@ -591,12 +592,13 @@ html, body {
     right: 0;
     gap: 6px;
     padding: 8px 10px calc(8px + env(safe-area-inset-bottom));
-    background: linear-gradient(135deg, var(--green-dark), var(--green));
-    box-shadow: 0 -2px 10px rgba(0,0,0,.25);
+    background: var(--bg);
+    border-top: 1px solid var(--border);
+    box-shadow: 0 -2px 10px rgba(0,0,0,.08);
     z-index: 100;
     flex-wrap: nowrap;
   }
-  .top-actions > .btn { flex: 1 1 0; padding: 10px 2px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; }
+  .top-actions > .btn { flex: 1 1 0; padding: 10px 2px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; background: var(--green); color: #fff; box-shadow: var(--shadow); }
   #uploadBtn { display: none; }
   .top-actions .upload-wrap { flex: 4 1 0; display: flex; }
   .upload-menu {
@@ -619,7 +621,7 @@ html, body {
     font-size: 11px;
     font-family: "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif;
     text-align: center;
-    background: rgba(255,255,255,.14);
+    background: var(--green);
     color: #fff;
     border-radius: 10px;
     white-space: normal;
@@ -629,6 +631,7 @@ html, body {
     align-items: center;
     justify-content: center;
     gap: 3px;
+    box-shadow: var(--shadow);
   }
   .b-icon { font-size: 28px; line-height: 1; filter: drop-shadow(0 1px 2px rgba(0,0,0,.35)); }
   .b-label { font-size: 11px; display: block; font-family: "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif; font-weight: 600; letter-spacing: .2px; }
@@ -636,7 +639,7 @@ html, body {
     .top-actions .b-label, .upload-menu-item .b-label { display: none; }
     .top-actions > .btn:hover .b-label, .upload-menu-item:hover .b-label { display: block; }
   }
-  .upload-menu-item:hover { background: rgba(255,255,255,.26); }
+  .upload-menu-item:hover { background: var(--green-dark); }
   .btn-label { display: inline; }
   .caret { display: none; }
   .btn, .icon-btn { padding: 9px 12px; font-size: 16px; }
