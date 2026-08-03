@@ -312,6 +312,16 @@ async function doRename() {
 
 /* ---------------- Edit (metin dosyalari) ---------------- */
 let editRel = "";
+function editFresh(rel) { return "/api/file?path=" + encodeURIComponent(rel) + "&_=" + Date.now(); }
+function invalidateFileCache(rel) {
+  const urls = ["/api/file?path=" + encodeURIComponent(rel), "/api/read?path=" + encodeURIComponent(rel)];
+  if (!("caches" in window)) return Promise.resolve();
+  return caches.keys().then((keys) =>
+    Promise.all(keys.map((name) =>
+      caches.open(name).then((c) => Promise.all(urls.map((u) => c.delete(u))))
+    ))
+  ).catch(() => {});
+}
 function openEdit(it, rel) {
   editRel = rel;
   document.getElementById("editTitle").textContent = "Düzenle: " + it.name;
@@ -319,7 +329,7 @@ function openEdit(it, rel) {
   ta.value = "Yukleniyor...";
   document.getElementById("editModal").hidden = false;
   if (/\.docx$/i.test(it.name)) {
-    fetch(fileUrl(rel))
+    fetch(editFresh(rel))
       .then((r) => (r.ok ? r.arrayBuffer() : Promise.reject()))
       .then((buf) => mammoth.convertToHtml({ arrayBuffer: buf }))
       .then((res) => {
@@ -336,7 +346,7 @@ function openEdit(it, rel) {
         toast("Icerik okunamadi", "error");
       });
   } else {
-    fetch("/api/read?path=" + encodeURIComponent(rel))
+    fetch("/api/read?path=" + encodeURIComponent(rel) + "&_=" + Date.now())
       .then((r) => (r.ok ? r.text() : Promise.reject()))
       .then((t) => { ta.value = t; })
       .catch(() => {
@@ -355,7 +365,12 @@ async function doEdit() {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ path: editRel, content, format: isDocx ? "docx" : undefined }),
   });
-  if (res.ok) { toast("Kaydedildi"); closeEdit(); }
+  if (res.ok) {
+    await invalidateFileCache(editRel);
+    toast("Kaydedildi");
+    closeEdit();
+    if (viewingRel === editRel) openFile(viewingItem, editRel);
+  }
   else {
     const data = await res.json().catch(() => ({}));
     toast(data.error || "Kaydedilemedi", "error");
@@ -743,7 +758,7 @@ async function viewPdf(rel) {
   try {
     if (typeof pdfjsLib === "undefined") throw new Error("PDF kutuphanesi yuklenmedi");
     pdfjsLib.GlobalWorkerOptions.workerSrc = "/vendor/pdfjs/pdf.worker.min.js";
-    const res = await fetch(fileUrl(rel));
+    const res = await fetch(fileUrl(rel) + "&_=" + Date.now());
     const buf = await res.arrayBuffer();
     const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
     body.innerHTML = '<div class="pdf-body"></div>';
@@ -768,7 +783,7 @@ async function viewPdf(rel) {
 async function viewDocx(rel) {
   const body = document.getElementById("viewerBody");
   try {
-    const res = await fetch(fileUrl(rel));
+    const res = await fetch(fileUrl(rel) + "&_=" + Date.now());
     const buf = await res.arrayBuffer();
     const result = await mammoth.convertToHtml({ arrayBuffer: buf });
     const isOtt = /osmanlica|osmanlıca/i.test(rel);
