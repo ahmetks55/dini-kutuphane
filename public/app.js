@@ -431,6 +431,7 @@ window.addEventListener("hashchange", () => {
     load();
   }
 });
+let leaving = false;
 window.addEventListener("popstate", () => {
   const openModal = Array.from(document.querySelectorAll(".modal-overlay")).find((m) => !m.hidden);
   if (openModal && openModal.id !== "viewerModal") {
@@ -449,13 +450,20 @@ window.addEventListener("popstate", () => {
   const raw = decodeURIComponent(location.hash.replace(/^#/, ""));
   if (!raw || raw === "/") {
     if (history.state && history.state.home) {
-      if (confirm("Uygulamadan çıkmak istediğinize emin misiniz?")) {
+      if (leaving || confirm("Uygulamadan çıkmak istediğinize emin misiniz?")) {
+        leaving = true;
         history.back();
       } else {
         history.forward();
       }
+      return;
+    }
+    if (leaving) {
+      history.back();
+      return;
     }
   }
+  leaving = false;
 });
 
 async function deleteItem(it, rel) {
@@ -1100,8 +1108,9 @@ document.addEventListener("keydown", (e) => {
 
 const _hash = decodeURIComponent(location.hash.replace(/^#/, ""));
 if (!location.hash || location.hash === "#") history.replaceState(null, "", "#/");
-if (!_hash || _hash === "/") {
+if ((!_hash || _hash === "/") && !sessionStorage.getItem("homeGuard")) {
   history.replaceState({ home: true }, "", "#/");
   history.pushState(null, "", "#/");
+  sessionStorage.setItem("homeGuard", "1");
 }
 load();
