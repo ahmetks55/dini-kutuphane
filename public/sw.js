@@ -1,4 +1,4 @@
-const CACHE = "dini-kutuphane-v34";
+const CACHE = "dini-kutuphane-v35";
 const CORE = [
   "./",
   "./index.html",
@@ -12,7 +12,13 @@ const CORE = [
 
 self.addEventListener("install", (e) => {
   e.waitUntil(
-    caches.open(CACHE).then((c) => c.addAll(CORE)).then(() => self.skipWaiting())
+    caches.open(CACHE).then(async (c) => {
+      await c.addAll(CORE);
+      try {
+        const res = await fetch("./api/tree?path=", { cache: "no-store" });
+        if (res.ok) await c.put("./api/tree?path=", res);
+      } catch (_) {}
+    }).then(() => self.skipWaiting())
   );
 });
 
@@ -24,35 +30,43 @@ self.addEventListener("activate", (e) => {
   );
 });
 
+async function staleWhileRevalidate(req) {
+  const cache = await caches.open(CACHE);
+  const hit = await cache.match(req);
+  const revalidate = fetch(req).then((res) => {
+    if (res && res.ok) {
+      const copy = res.clone();
+      cache.put(req, copy);
+    }
+    return res;
+  }).catch(() => null);
+  return hit || revalidate;
+}
+
 self.addEventListener("fetch", (e) => {
   if (e.request.method !== "GET") return;
   const url = new URL(e.request.url);
   if (url.origin !== location.origin) return;
 
   if (url.pathname.startsWith("/api/")) {
+    e.respondWith(staleWhileRevalidate(e.request));
+    return;
+  }
+
+  if (e.request.mode === "navigate") {
     e.respondWith(
       fetch(e.request)
         .then((res) => {
           if (res && res.ok) {
             const copy = res.clone();
-            caches.open(CACHE).then((c) => c.put(e.request, copy));
+            caches.open(CACHE).then((c) => c.put("./index.html", copy));
           }
           return res;
         })
-        .catch(() => caches.match(e.request))
+        .catch(() => caches.match("./index.html"))
     );
     return;
   }
 
-  e.respondWith(
-    caches.match(e.request).then((hit) => {
-      return hit || fetch(e.request).then((res) => {
-        if (res && res.ok) {
-          const copy = res.clone();
-          caches.open(CACHE).then((c) => c.put(e.request, copy));
-        }
-        return res;
-      });
-    })
-  );
+  e.respondWith(staleWhileRevalidate(e.request));
 });
