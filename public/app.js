@@ -1118,19 +1118,6 @@ if ("serviceWorker" in navigator) {
   }
   window.addEventListener("load", autoPrecache);
   window.addEventListener("online", autoPrecache);
-  navigator.serviceWorker.addEventListener("message", (e) => {
-    const d = e.data;
-    if (!d) return;
-    const btn = document.getElementById("precacheBtn");
-    if (d.type === "PRECACHE_PROGRESS") {
-      const p = d.total ? Math.round((d.done / d.total) * 100) : 0;
-      if (btn) btn.textContent = "⬇ Onbellek " + p + "%";
-      if (d.done % 10 === 0 || d.done >= d.total) toast("Onbellekleniyor: " + d.done + "/" + d.total);
-    } else if (d.type === "PRECACHE_DONE") {
-      if (btn) btn.textContent = "⬇ Tümünü Önbelleğe Al";
-      if (d.total > 0) toast("Onbellek guncellendi: " + d.total + " dosya hazir");
-    }
-  });
 }
 
 load();
