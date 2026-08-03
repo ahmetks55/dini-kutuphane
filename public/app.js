@@ -117,7 +117,6 @@ function renderGrid() {
 
   if (!state.path) {
     document.getElementById("itemCount").textContent = state.items.length + " ogeler";
-    armHome();
     renderHome();
     return;
   }
@@ -407,20 +406,6 @@ async function doMove() {
 }
 
 /* ---------------- Navigation ---------------- */
-let homeArmed = false;
-function armHome() {
-  if (homeArmed) return;
-  const raw = decodeURIComponent(location.hash.replace(/^#/, ""));
-  if (raw && raw !== "/") return;
-  if (history.state && history.state.__guard) {
-    history.pushState(null, "", "#/");
-    homeArmed = true;
-    return;
-  }
-  history.replaceState({ __guard: true }, "", "#/");
-  history.pushState(null, "", "#/");
-  homeArmed = true;
-}
 function go(p) {
   const h = p ? "/" + p : "/";
   if (location.hash === "#" + h) {
@@ -446,12 +431,6 @@ window.addEventListener("hashchange", () => {
     load();
   }
 });
-let exitConfirmed = false;
-window.addEventListener("beforeunload", (e) => {
-  if (exitConfirmed) return;
-  e.preventDefault();
-  e.returnValue = "";
-});
 window.addEventListener("popstate", () => {
   const openModal = Array.from(document.querySelectorAll(".modal-overlay")).find((m) => !m.hidden);
   if (openModal && openModal.id !== "viewerModal") {
@@ -468,17 +447,14 @@ window.addEventListener("popstate", () => {
     return;
   }
   const raw = decodeURIComponent(location.hash.replace(/^#/, ""));
-  const [pathPart] = raw.split(":f=");
-  if (pathPart && pathPart !== "/") return;
-  if (history.state && history.state.__guard) {
-    if (confirm("Uygulamadan çıkmak istediğinize emin misiniz?")) {
-      exitConfirmed = true;
-      history.back();
-      return;
+  if (!raw || raw === "/") {
+    if (history.state && history.state.home) {
+      if (confirm("Uygulamadan çıkmak istediğinize emin misiniz?")) {
+        history.back();
+      } else {
+        history.forward();
+      }
     }
-    homeArmed = false;
-    state.path = "";
-    load();
   }
 });
 
@@ -1122,6 +1098,10 @@ document.addEventListener("keydown", (e) => {
   if (e.key === "Escape") { closeViewer(); closeUpload(); closeScan(); closeCrop(); closeItemMenu(); closeSearch(); closeMoveModal(); closeNewText(); closeRename(); closeEdit(); closeCatMenu(); closeUploadMenu(); }
 });
 
+const _hash = decodeURIComponent(location.hash.replace(/^#/, ""));
 if (!location.hash || location.hash === "#") history.replaceState(null, "", "#/");
-armHome();
+if (!_hash || _hash === "/") {
+  history.replaceState({ home: true }, "", "#/");
+  history.pushState(null, "", "#/");
+}
 load();
