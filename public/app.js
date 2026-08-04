@@ -463,7 +463,7 @@ window.addEventListener("hashchange", () => {
 function exitApp() {
   if (!confirm("Uygulamadan çıkmak istediğinize emin misiniz?")) return;
   try { window.close(); } catch (e) {}
-  setTimeout(() => { window.location.replace("about:blank"); }, 150);
+  setTimeout(() => { window.location.replace("exit.html"); }, 120);
 }
 
 async function deleteItem(it, rel) {
@@ -1208,4 +1208,4 @@ if ("serviceWorker" in navigator) {
 load();
 
 const verEl = document.getElementById("appVersion");
-if (verEl) verEl.textContent = "v42";
+if (verEl) verEl.textContent = "v43";
