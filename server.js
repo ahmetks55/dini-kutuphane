@@ -348,10 +348,11 @@ async function writeTextDoc(target, text, fmt) {
     fs.writeFileSync(target, text, "utf8");
   } else {
     const paras = text.split(/\r?\n/).map((ln) => {
-      const isRtl = ARABIC_RE.test(ln);
+      const lineText = ln === "" ? "\u00A0" : ln;
+      const isRtl = ARABIC_RE.test(lineText);
       const run = isRtl
-        ? new TextRun({ text: ln, font: { name: "Traditional Arabic", hint: "eastAsia" }, size: 24 })
-        : new TextRun({ text: ln, font: { name: "Segoe UI" }, size: 24 });
+        ? new TextRun({ text: lineText, font: { name: "Traditional Arabic", hint: "eastAsia" }, size: 24 })
+        : new TextRun({ text: lineText, font: { name: "Segoe UI" }, size: 24 });
       return new Paragraph({ children: [run], bidirectional: isRtl, spacing: { after: 160 } });
     });
     fs.writeFileSync(target, await Packer.toBuffer(new Document({ sections: [{ children: paras }] })));
