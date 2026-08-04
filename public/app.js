@@ -1151,6 +1151,7 @@ document.getElementById("scanInput").addEventListener("change", async (e) => {
 const initialHash = decodeURIComponent(location.hash.replace(/^#/, ""));
 const initialPath = initialHash.split(":f=")[0].replace(/^\//, "");
 state.path = initialPath;
+if (!initialPath && history.state === null) history.pushState({ guard: true }, "", location.hash || "#/");
 document.querySelectorAll('input[name="sfmt"]').forEach((r) => r.addEventListener("change", toggleScanFormat));
 document.getElementById("viewerModal").addEventListener("click", (e) => {
   if (e.target.id === "viewerModal") closeViewer();
@@ -1216,4 +1217,4 @@ if ("serviceWorker" in navigator) {
 load();
 
 const verEl = document.getElementById("appVersion");
-if (verEl) verEl.textContent = "v44";
+if (verEl) verEl.textContent = "v45";
