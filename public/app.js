@@ -1189,6 +1189,12 @@ if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     navigator.serviceWorker.register("sw.js").catch(() => {});
   });
+  let swRefreshing = false;
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    if (swRefreshing) return;
+    swRefreshing = true;
+    window.location.reload();
+  });
   function autoPrecache() {
     if (!navigator.onLine) return;
     navigator.serviceWorker.ready.then((reg) => {
@@ -1200,3 +1206,6 @@ if ("serviceWorker" in navigator) {
 }
 
 load();
+
+const verEl = document.getElementById("appVersion");
+if (verEl) verEl.textContent = "v42";
