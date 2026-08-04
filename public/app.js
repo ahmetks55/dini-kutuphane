@@ -446,6 +446,14 @@ function go(p) {
 }
 function openFolder(rel) { go(rel); }
 function goHome() { go("/"); }
+window.addEventListener("popstate", () => {
+  const raw = decodeURIComponent(location.hash.replace(/^#/, ""));
+  const pathPart = raw.split(":f=")[0].replace(/^\//, "");
+  if (pathPart) return;
+  if (!document.getElementById("viewerModal").hidden) return;
+  history.pushState(null, "", location.hash || "#/");
+  load();
+});
 window.addEventListener("hashchange", () => {
   const raw = decodeURIComponent(location.hash.replace(/^#/, ""));
   const [pathPart, filePart] = raw.split(":f=");
@@ -1208,4 +1216,4 @@ if ("serviceWorker" in navigator) {
 load();
 
 const verEl = document.getElementById("appVersion");
-if (verEl) verEl.textContent = "v43";
+if (verEl) verEl.textContent = "v44";
