@@ -1349,4 +1349,4 @@ if ("serviceWorker" in navigator) {
 load();
 
 const verEl = document.getElementById("appVersion");
-if (verEl) verEl.textContent = "v48";
+if (verEl) verEl.textContent = "v49";

@@ -587,7 +587,7 @@ html, body {
 #videoModal.modal-overlay, #webModal.modal-overlay { z-index: 200; }
 .modal.video, .modal.web { max-width: 960px; height: auto; }
 #videoModal.modal-overlay { background: transparent; pointer-events: none; }
-#videoModal .modal.video { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); margin: 0; pointer-events: auto; }
+#videoModal .modal.video { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); margin: 0; pointer-events: auto; width: min(480px, 92vw); max-width: 960px; min-width: 240px; min-height: 200px; resize: both; overflow: hidden; }
 #videoModal .modal.video.dragging { transition: none; }
 #videoModal .modal.video .modal-head { cursor: grab; user-select: none; -webkit-user-select: none; }
 #videoModal .modal.video .modal-head:active { cursor: grabbing; }
