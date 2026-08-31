@@ -835,6 +835,51 @@ function youtubeIdFromUrl(url) {
   return m ? m[1] : null;
 }
 
+let videoDrag = null;
+
+function initVideoDrag() {
+  const modal = document.getElementById("videoModal").querySelector(".modal.video");
+  const head = modal.querySelector(".modal-head");
+  if (!modal || !head) return;
+  head.addEventListener("mousedown", videoDragStart);
+  document.addEventListener("mousemove", (e) => videoDragMove(e));
+  document.addEventListener("mouseup", videoDragEnd);
+  head.addEventListener("touchstart", (e) => videoDragStart(e.touches ? e.touches[0] : e), { passive: false });
+  document.addEventListener("touchmove", (e) => {
+    const t = e.touches ? e.touches[0] : e;
+    videoDragMove(t);
+    if (videoDrag) e.preventDefault();
+  }, { passive: false });
+  document.addEventListener("touchend", videoDragEnd);
+}
+
+function videoDragStart(e) {
+  const modal = document.getElementById("videoModal").querySelector(".modal.video");
+  if (e.target.closest && e.target.closest("button")) return;
+  const rect = modal.getBoundingClientRect();
+  videoDrag = { startX: e.clientX, startY: e.clientY, left: rect.left, top: rect.top };
+  modal.classList.add("dragging");
+  if (e.preventDefault) e.preventDefault();
+}
+
+function videoDragMove(e) {
+  if (!videoDrag) return;
+  const modal = document.getElementById("videoModal").querySelector(".modal.video");
+  const dx = e.clientX - videoDrag.startX;
+  const dy = e.clientY - videoDrag.startY;
+  modal.style.left = (videoDrag.left + dx) + "px";
+  modal.style.top = (videoDrag.top + dy) + "px";
+  modal.style.transform = "none";
+  modal.style.margin = "0";
+}
+
+function videoDragEnd() {
+  if (!videoDrag) return;
+  videoDrag = null;
+  const modal = document.getElementById("videoModal").querySelector(".modal.video");
+  modal.classList.remove("dragging");
+}
+
 function openPdfLink(url) {
   const title = (viewingItem && viewingItem.name) || "Bağlantı";
   if (isYoutube(url)) {
@@ -847,6 +892,7 @@ function openPdfLink(url) {
       'allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe>';
     document.getElementById("videoOpenLink").href = url;
     document.getElementById("videoModal").hidden = false;
+    initVideoDrag();
     return;
   }
   document.getElementById("webTitle").textContent = title;
@@ -859,6 +905,8 @@ function openPdfLink(url) {
 function closeVideo() {
   document.getElementById("videoModal").hidden = true;
   document.getElementById("videoFrame").innerHTML = "";
+  const m = document.getElementById("videoModal").querySelector(".modal.video");
+  if (m) { m.style.left = ""; m.style.top = ""; m.style.transform = ""; m.style.margin = ""; }
 }
 
 function closeWeb() {
@@ -1301,4 +1349,4 @@ if ("serviceWorker" in navigator) {
 load();
 
 const verEl = document.getElementById("appVersion");
-if (verEl) verEl.textContent = "v46";
+if (verEl) verEl.textContent = "v47";
