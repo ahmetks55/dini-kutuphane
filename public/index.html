@@ -7,7 +7,7 @@
   <link rel="manifest" href="manifest.json" />
   <title>Dini Kutuphane</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%93%96%3C/text%3E%3C/svg%3E" />
-  <link rel="stylesheet" href="styles.css?v=27" />
+  <link rel="stylesheet" href="styles.css?v=28" />
 </head>
 <body>
   <header class="topbar">
@@ -58,6 +58,35 @@
         <button class="btn btn-ghost icon-btn" onclick="openViewerMenu(event)" title="İşlemler" aria-label="İşlemler">⋮</button>
       </div>
       <div class="viewer-body" id="viewerBody"></div>
+    </div>
+  </div>
+
+  <!-- Video modal -->
+  <div class="modal-overlay" id="videoModal" hidden>
+    <div class="modal video">
+      <div class="modal-head">
+        <span></span>
+        <div class="modal-title" id="videoTitle">Video</div>
+        <button class="btn btn-ghost icon-btn" onclick="closeVideo()" title="Kapat" aria-label="Kapat">✕</button>
+      </div>
+      <div class="video-body">
+        <div class="video-frame" id="videoFrame"></div>
+        <a class="video-open-link" id="videoOpenLink" target="_blank" rel="noopener">İzleyemezsen dışarıda aç</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Web link modal -->
+  <div class="modal-overlay" id="webModal" hidden>
+    <div class="modal web">
+      <div class="modal-head">
+        <button class="btn btn-ghost icon-btn" onclick="closeWeb()" title="Kapat" aria-label="Kapat">✕</button>
+        <div class="modal-title" id="webTitle">Bağlantı</div>
+        <a class="video-open-link" id="webOpenLink" target="_blank" rel="noopener">Dışarıda aç</a>
+      </div>
+      <div class="web-body">
+        <iframe class="web-frame" id="webFrame" sandbox="allow-scripts allow-same-origin allow-popups" referrerpolicy="no-referrer"></iframe>
+      </div>
     </div>
   </div>
 
@@ -250,6 +279,6 @@
 
   <script src="/vendor/mammoth/mammoth.browser.min.js"></script>
   <script src="/vendor/pdfjs/pdf.min.js"></script>
-  <script src="app.js?v=45"></script>
+  <script src="app.js?v=46"></script>
 </body>
 </html>

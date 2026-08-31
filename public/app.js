@@ -776,16 +776,94 @@ async function viewPdf(rel) {
     );
     for (const page of pages) {
       const vp = page.getViewport({ scale: 1.5 });
+      const pageWrap = document.createElement("div");
+      pageWrap.className = "pdf-page";
       const canvas = document.createElement("canvas");
       canvas.width = vp.width;
       canvas.height = vp.height;
-      wrap.appendChild(canvas);
+      pageWrap.appendChild(canvas);
+      wrap.appendChild(pageWrap);
       const ctx = canvas.getContext("2d");
       await page.render({ canvasContext: ctx, viewport: vp }).promise;
+      addPdfLinkOverlays(page, vp, pageWrap, canvas);
     }
   } catch (e) {
     body.innerHTML = '<div class="pdf-body"><p class="viewer-loading">PDF goruntulenemedi. <a class="btn btn-primary" href="' + fileUrl(rel) + '" download>Indir</a></p></div>';
   }
+}
+
+async function addPdfLinkOverlays(page, vp, pageWrap, canvas) {
+  try {
+    const annots = await page.getAnnotations();
+    const links = annots.filter((a) => a.subtype === "Link" && (a.url || a.unsafeUrl));
+    if (!links.length) return;
+    const scale = pageWrap.clientWidth / canvas.width;
+    for (const a of links) {
+      const url = a.url || a.unsafeUrl;
+      const [x0, y0, x1, y1] = a.rect;
+      const [lx, ty] = vp.convertToViewportPoint(x0, y1);
+      const [rx, by] = vp.convertToViewportPoint(x1, y0);
+      const w = (rx - lx) * scale;
+      const h = (by - ty) * scale;
+      if (w < 2 || h < 2) continue;
+      const ov = document.createElement("a");
+      ov.className = "pdf-link";
+      ov.href = "#";
+      ov.title = url;
+      ov.style.left = lx * scale + "px";
+      ov.style.top = ty * scale + "px";
+      ov.style.width = w + "px";
+      ov.style.height = h + "px";
+      ov.addEventListener("click", (e) => {
+        e.preventDefault();
+        openPdfLink(url);
+      });
+      pageWrap.appendChild(ov);
+    }
+  } catch (e) {
+    /* link katmani olusturulamazsa PDF goruntusu korunur */
+  }
+}
+
+function isYoutube(url) {
+  return /youtu(?:\.be|be\.com)/i.test(String(url));
+}
+
+function youtubeIdFromUrl(url) {
+  const u = String(url);
+  const m = u.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?[^#]*v=|embed\/|shorts\/))([A-Za-z0-9_-]{6,})/);
+  return m ? m[1] : null;
+}
+
+function openPdfLink(url) {
+  const title = (viewingItem && viewingItem.name) || "Bağlantı";
+  if (isYoutube(url)) {
+    const id = youtubeIdFromUrl(url);
+    if (!id) { window.open(url, "_blank", "noopener"); return; }
+    document.getElementById("videoTitle").textContent = title;
+    document.getElementById("videoFrame").innerHTML =
+      '<iframe src="https://www.youtube-nocookie.com/embed/' + id +
+      '?autoplay=1&rel=0&playsinline=1" title="YouTube video" ' +
+      'allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe>';
+    document.getElementById("videoOpenLink").href = url;
+    document.getElementById("videoModal").hidden = false;
+    return;
+  }
+  document.getElementById("webTitle").textContent = title;
+  document.getElementById("webTitle").title = url;
+  document.getElementById("webFrame").src = url;
+  document.getElementById("webOpenLink").href = url;
+  document.getElementById("webModal").hidden = false;
+}
+
+function closeVideo() {
+  document.getElementById("videoModal").hidden = true;
+  document.getElementById("videoFrame").innerHTML = "";
+}
+
+function closeWeb() {
+  document.getElementById("webModal").hidden = true;
+  document.getElementById("webFrame").src = "about:blank";
 }
 
 async function viewDocx(rel) {
@@ -1156,6 +1234,12 @@ document.querySelectorAll('input[name="sfmt"]').forEach((r) => r.addEventListene
 document.getElementById("viewerModal").addEventListener("click", (e) => {
   if (e.target.id === "viewerModal") closeViewer();
 });
+document.getElementById("videoModal").addEventListener("click", (e) => {
+  if (e.target.id === "videoModal") closeVideo();
+});
+document.getElementById("webModal").addEventListener("click", (e) => {
+  if (e.target.id === "webModal") closeWeb();
+});
 document.getElementById("uploadModal").addEventListener("click", (e) => {
   if (e.target.id === "uploadModal") closeUpload();
 });
@@ -1217,4 +1301,4 @@ if ("serviceWorker" in navigator) {
 load();
 
 const verEl = document.getElementById("appVersion");
-if (verEl) verEl.textContent = "v45";
+if (verEl) verEl.textContent = "v46";
