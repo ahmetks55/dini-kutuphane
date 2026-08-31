@@ -114,8 +114,8 @@ html, body {
   text-align: left;
   border: none;
   background: none;
-  padding: 10px 12px;
-  font-size: 14px;
+  padding: 13px 14px;
+  font-size: 18px;
   border-radius: 8px;
   cursor: pointer;
   color: var(--text);
