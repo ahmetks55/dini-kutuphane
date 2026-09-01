@@ -475,7 +475,7 @@ function exitApp() {
 }
 
 function appDownloadUrl() {
-  return location.origin + location.pathname.replace(/[^/]*$/, "") + "apk/DiniKutuphane.apk";
+  return "https://dini-kutuphane.onrender.com/apk/DiniKutuphane.apk";
 }
 
 async function shareApp() {
