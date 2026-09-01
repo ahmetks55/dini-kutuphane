@@ -474,6 +474,27 @@ function exitApp() {
   setTimeout(() => { window.location.replace("exit.html"); }, 120);
 }
 
+async function shareApp() {
+  const url = location.origin + location.pathname;
+  const title = "Dini Kütüphane";
+  const text = "Dini Kütüphane - Dualar, Sureler, Mevlid, Ilahiler, Kasideler ve Salavatlar";
+  if (navigator.share) {
+    try { await navigator.share({ title, text, url }); return; }
+    catch (e) { if (!(e && e.name === "AbortError")) {} }
+  }
+  try {
+    await navigator.clipboard.writeText(url);
+    toast("Bağlantı kopyalandı");
+  } catch (e) {
+    const ta = document.createElement("textarea");
+    ta.value = url;
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand("copy"); toast("Bağlantı kopyalandı"); } catch (e2) {}
+    ta.remove();
+  }
+}
+
 async function deleteItem(it, rel) {
   if (!confirm(`"${it.name}" silinsin mi?\nBu islem geri alinamaz.`)) return;
   const res = await fetch("/api/item?path=" + encodeURIComponent(rel), { method: "DELETE" });
@@ -1349,4 +1370,4 @@ if ("serviceWorker" in navigator) {
 load();
 
 const verEl = document.getElementById("appVersion");
-if (verEl) verEl.textContent = "v52";
+if (verEl) verEl.textContent = "v53";
