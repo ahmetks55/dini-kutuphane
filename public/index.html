@@ -282,6 +282,10 @@
 
   <script src="/vendor/mammoth/mammoth.browser.min.js"></script>
   <script src="/vendor/pdfjs/pdf.min.js"></script>
-  <script src="app.js?v=56"></script>
+  <script type="module">
+    import { Share } from './capacitor-share/index.js';
+    window.CapacitorShare = Share;
+  </script>
+  <script src="app.js?v=57"></script>
 </body>
 </html>
