@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Dini Kutuphane</string>
+    <string name="title_activity_main">Dini Kutuphane</string>
+    <string name="package_name">com.dinikutuphane.app</string>
+    <string name="custom_url_scheme">com.dinikutuphane.app</string>
+</resources>

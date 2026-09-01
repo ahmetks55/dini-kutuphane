@@ -474,20 +474,25 @@ function exitApp() {
   setTimeout(() => { window.location.replace("exit.html"); }, 120);
 }
 
+function appDownloadUrl() {
+  return location.origin + location.pathname.replace(/[^/]*$/, "") + "apk/DiniKutuphane.apk";
+}
+
 async function shareApp() {
-  const url = location.origin + location.pathname;
+  const site = location.origin + location.pathname;
+  const apk = appDownloadUrl();
   const title = "Dini Kütüphane";
-  const text = "Dini Kütüphane - Dualar, Sureler, Mevlid, Ilahiler, Kasideler ve Salavatlar";
+  const text = "Dini Kütüphane - Dualar, Sureler, Mevlid, Ilahiler, Kasideler ve Salavatlar\n\u0130ndirme: " + apk;
   if (navigator.share) {
-    try { await navigator.share({ title, text, url }); return; }
+    try { await navigator.share({ title, text, url: site }); return; }
     catch (e) { if (!(e && e.name === "AbortError")) {} }
   }
   try {
-    await navigator.clipboard.writeText(url);
+    await navigator.clipboard.writeText(text);
     toast("Bağlantı kopyalandı");
   } catch (e) {
     const ta = document.createElement("textarea");
-    ta.value = url;
+    ta.value = text;
     document.body.appendChild(ta);
     ta.select();
     try { document.execCommand("copy"); toast("Bağlantı kopyalandı"); } catch (e2) {}
@@ -1370,4 +1375,4 @@ if ("serviceWorker" in navigator) {
 load();
 
 const verEl = document.getElementById("appVersion");
-if (verEl) verEl.textContent = "v53";
+if (verEl) verEl.textContent = "v54";

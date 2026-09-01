@@ -8,6 +8,9 @@
     "seed": "node seed.js"
   },
   "dependencies": {
+    "@capacitor/android": "^8.5.1",
+    "@capacitor/cli": "^8.5.1",
+    "@capacitor/core": "^8.5.1",
     "docx": "^8.5.0",
     "express": "^4.19.2",
     "mammoth": "^1.8.0",
@@ -15,5 +18,8 @@
     "pdf-lib": "^1.17.1",
     "pdfjs-dist": "3.11.174",
     "tesseract.js": "^7.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^7.0.2"
   }
 }
