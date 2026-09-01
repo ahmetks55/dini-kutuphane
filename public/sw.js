@@ -17,8 +17,8 @@ self.addEventListener("install", (e) => {
     caches.open(CACHE).then(async (c) => {
       await c.addAll(CORE);
       try {
-        const res = await fetch("/api/tree?path=", { cache: "no-store" });
-        if (res.ok) await c.put("/api/tree?path=", res);
+        const res = await fetch("./api/tree?path=", { cache: "no-store" });
+        if (res.ok) await c.put("./api/tree?path=", res);
       } catch (_) {}
     }).then(() => self.skipWaiting())
   );
