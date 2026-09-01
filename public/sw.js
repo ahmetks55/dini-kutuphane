@@ -1,10 +1,10 @@
-const CACHE = "dini-kutuphane-v50";
+const CACHE = "dini-kutuphane-v52";
 const CORE = [
   "./",
   "./index.html",
   "./exit.html",
   "./styles.css?v=32",
-  "./app.js?v=50",
+  "./app.js?v=52",
   "./manifest.json",
   "./icon.svg",
   "./fonts/AmiriQuran-Regular.ttf",
