@@ -499,7 +499,7 @@ async function shareApp() {
   const body = document.getElementById("shareDiagBody");
   if (body) body.textContent = "";
   shareDiagLog("Capacitor: " + (window.Capacitor ? "var" : "YOK"));
-  shareDiagLog("CapacitorShare: " + (window.CapacitorShare ? "var" : "YOK"));
+  shareDiagLog("Capacitor.Plugins.Share: " + (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Share ? "var" : "YOK"));
   shareDiagLog("navigator.share: " + (navigator.share ? "var" : "YOK"));
   if (navigator.share) {
     try { await navigator.share({ title, text, url: apk }); shareDiagLog("WebShare: basarili"); return; }
@@ -508,9 +508,12 @@ async function shareApp() {
       if (e && e.name === "AbortError") return;
     }
   }
-  if (window.CapacitorShare) {
+  const nativeShare = window.CapacitorShare
+    || (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Share);
+  shareDiagLog("nativeShare secimi: " + (nativeShare ? "var" : "YOK"));
+  if (nativeShare) {
     try {
-      await window.CapacitorShare.share({ title, text, url: apk, dialogTitle: "Dini Kütüphane'yi paylaş" });
+      await nativeShare.share({ title, text, url: apk, dialogTitle: "Dini Kütüphane'yi paylaş" });
       shareDiagLog("NativeShare: basarili");
       return;
     } catch (e) {
@@ -1406,7 +1409,7 @@ if ("serviceWorker" in navigator) {
 
 load();
 
-const APP_VERSION = "v62";
+const APP_VERSION = "v63";
 const verEl = document.getElementById("appVersion");
 if (verEl) {
   verEl.textContent = "Sürüm " + APP_VERSION + " · APK DiniKutuphane-" + APP_VERSION + ".apk";
