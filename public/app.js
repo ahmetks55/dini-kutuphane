@@ -484,7 +484,10 @@ async function shareApp() {
   const text = "Dini Kütüphane - Dualar, Sureler, Mevlid, Ilahiler, Kasideler ve Salavatlar\n\u0130ndirme: " + apk;
   if (navigator.share) {
     try { await navigator.share({ title, text, url: apk }); return; }
-    catch (e) { if (e && e.name === "AbortError") return; }
+    catch (e) {
+      if (e && e.name === "AbortError") return;
+      toast("Web paylaşım kapalı: " + (e && e.name ? e.name : "hata"), "error");
+    }
   }
   if (window.CapacitorShare) {
     try {
@@ -492,7 +495,10 @@ async function shareApp() {
       return;
     } catch (e) {
       if (e && e.name === "UserCanceledError") return;
+      toast("Mobil paylaşım kapalı: " + (e && e.name ? e.name : "hata"), "error");
     }
+  } else {
+    toast("Mobil paylaşım hazır değil", "error");
   }
   try {
     await navigator.clipboard.writeText(text);
@@ -1381,7 +1387,7 @@ if ("serviceWorker" in navigator) {
 
 load();
 
-const APP_VERSION = "v60";
+const APP_VERSION = "v61";
 const verEl = document.getElementById("appVersion");
 if (verEl) {
   verEl.textContent = "Sürüm " + APP_VERSION + " · APK DiniKutuphane-" + APP_VERSION + ".apk";
