@@ -1409,7 +1409,7 @@ if ("serviceWorker" in navigator) {
 
 load();
 
-const APP_VERSION = "v63";
+const APP_VERSION = "v64";
 const verEl = document.getElementById("appVersion");
 if (verEl) {
   verEl.textContent = "Sürüm " + APP_VERSION + " · APK DiniKutuphane-" + APP_VERSION + ".apk";

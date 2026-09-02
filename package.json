@@ -1,4 +1,4 @@
-{
+﻿{
   "name": "dini-kutuphane",
   "version": "1.0.0",
   "description": "Dini Kutuphane - Dualar, Sureler, Mevlid, Ilahiler ve Kasideler icin yerel web uygulamasi",
@@ -8,10 +8,10 @@
     "seed": "node seed.js"
   },
   "dependencies": {
-    "@capacitor/android": "^8.5.1",
-    "@capacitor/cli": "^8.5.1",
-    "@capacitor/core": "^8.5.1",
-    "@capacitor/share": "^8.0.1",
+    "@capacitor/android": "8.0.1",
+    "@capacitor/cli": "8.0.1",
+    "@capacitor/core": "8.0.1",
+    "@capacitor/share": "8.0.1",
     "docx": "^8.5.0",
     "express": "^4.19.2",
     "mammoth": "^1.8.0",
@@ -21,6 +21,6 @@
     "tesseract.js": "^7.0.0"
   },
   "devDependencies": {
-    "typescript": "^7.0.2"
+    "typescript": "5.4.5"
   }
 }
