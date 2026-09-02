@@ -479,10 +479,13 @@ function appDownloadUrl() {
 }
 
 async function shareApp() {
-  const site = location.origin + location.pathname;
   const apk = appDownloadUrl();
   const title = "Dini Kütüphane";
   const text = "Dini Kütüphane - Dualar, Sureler, Mevlid, Ilahiler, Kasideler ve Salavatlar\n\u0130ndirme: " + apk;
+  if (navigator.share) {
+    try { await navigator.share({ title, text, url: apk }); return; }
+    catch (e) { if (e && e.name === "AbortError") return; }
+  }
   if (window.CapacitorShare) {
     try {
       await window.CapacitorShare.share({ title, text, url: apk, dialogTitle: "Dini Kütüphane'yi paylaş" });
@@ -490,10 +493,6 @@ async function shareApp() {
     } catch (e) {
       if (e && e.name === "UserCanceledError") return;
     }
-  }
-  if (navigator.share) {
-    try { await navigator.share({ title, text, url: site }); return; }
-    catch (e) { if (e && e.name === "AbortError") return; }
   }
   try {
     await navigator.clipboard.writeText(text);
@@ -1383,4 +1382,4 @@ if ("serviceWorker" in navigator) {
 load();
 
 const verEl = document.getElementById("appVersion");
-if (verEl) verEl.textContent = "v57";
+if (verEl) verEl.textContent = "v58";

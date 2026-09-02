@@ -24,6 +24,7 @@ app.get("/sw.js", (req, res) => {
 });
 
 app.use(express.static(path.join(__dirname, "public")));
+app.use("/apk", express.static(path.join(__dirname, "apk")));
 app.use(
   "/vendor/mammoth/mammoth.browser.min.js",
   express.static(path.join(__dirname, "node_modules", "mammoth", "mammoth.browser.min.js"))
