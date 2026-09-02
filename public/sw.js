@@ -1,10 +1,10 @@
-﻿const CACHE = "dini-kutuphane-v65";
+const CACHE = "dini-kutuphane-v66";
 const CORE = [
   "./",
   "./index.html",
   "./exit.html",
-  "./styles.css?v=32",
-  "./app.js?v=65",
+  "./styles.css?v=66",
+  "./app.js?v=66",
   "./manifest.json",
   "./icon-192.png",
   "./apple-touch-icon.png",
