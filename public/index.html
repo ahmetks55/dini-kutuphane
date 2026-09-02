@@ -50,6 +50,11 @@
   </main>
 
   <div class="toast" id="toast"></div>
+  <div class="share-diag" id="shareDiag" hidden>
+    <div class="share-diag-title">Paylaşım Durumu</div>
+    <pre class="share-diag-body" id="shareDiagBody"></pre>
+    <button class="btn btn-ghost" onclick="closeShareDiag()">Kapat</button>
+  </div>
   <div class="app-version" id="appVersion" title="Uygulama sürümü"></div>
 
   <!-- File viewer modal -->
@@ -286,6 +291,6 @@
     import { Share } from './capacitor-share/index.js';
     window.CapacitorShare = Share;
   </script>
-  <script src="app.js?v=61"></script>
+  <script src="app.js?v=62"></script>
 </body>
 </html>

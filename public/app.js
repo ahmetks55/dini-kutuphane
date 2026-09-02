@@ -478,28 +478,47 @@ function appDownloadUrl() {
   return "https://dini-kutuphane.onrender.com/apk/DiniKutuphane-" + APP_VERSION + ".apk";
 }
 
+/* ---------------- Share ---------------- */
+function shareDiagLog(line) {
+  const d = document.getElementById("shareDiag");
+  const b = document.getElementById("shareDiagBody");
+  if (!d) return;
+  if (!b) return;
+  b.textContent += (b.textContent ? "\n" : "") + line;
+  d.hidden = false;
+}
+function closeShareDiag() {
+  const d = document.getElementById("shareDiag");
+  if (d) d.hidden = true;
+}
+
 async function shareApp() {
   const apk = appDownloadUrl();
   const title = "Dini Kütüphane";
   const text = "Dini Kütüphane - Dualar, Sureler, Mevlid, Ilahiler, Kasideler ve Salavatlar\n\u0130ndirme: " + apk;
+  const body = document.getElementById("shareDiagBody");
+  if (body) body.textContent = "";
+  shareDiagLog("Capacitor: " + (window.Capacitor ? "var" : "YOK"));
+  shareDiagLog("CapacitorShare: " + (window.CapacitorShare ? "var" : "YOK"));
+  shareDiagLog("navigator.share: " + (navigator.share ? "var" : "YOK"));
   if (navigator.share) {
-    try { await navigator.share({ title, text, url: apk }); return; }
+    try { await navigator.share({ title, text, url: apk }); shareDiagLog("WebShare: basarili"); return; }
     catch (e) {
+      shareDiagLog("WebShare hata: " + (e && e.name ? e.name : "bilinmiyor") + " | " + (e && e.message ? e.message : ""));
       if (e && e.name === "AbortError") return;
-      toast("Web paylaşım kapalı: " + (e && e.name ? e.name : "hata"), "error");
     }
   }
   if (window.CapacitorShare) {
     try {
       await window.CapacitorShare.share({ title, text, url: apk, dialogTitle: "Dini Kütüphane'yi paylaş" });
+      shareDiagLog("NativeShare: basarili");
       return;
     } catch (e) {
+      shareDiagLog("NativeShare hata: " + (e && e.name ? e.name : "bilinmiyor") + " | " + (e && e.message ? e.message : ""));
       if (e && e.name === "UserCanceledError") return;
-      toast("Mobil paylaşım kapalı: " + (e && e.name ? e.name : "hata"), "error");
     }
-  } else {
-    toast("Mobil paylaşım hazır değil", "error");
   }
+  shareDiagLog("Kopyalamaya dusuyorum...");
   try {
     await navigator.clipboard.writeText(text);
     toast("Bağlantı kopyalandı");
@@ -1387,7 +1406,7 @@ if ("serviceWorker" in navigator) {
 
 load();
 
-const APP_VERSION = "v61";
+const APP_VERSION = "v62";
 const verEl = document.getElementById("appVersion");
 if (verEl) {
   verEl.textContent = "Sürüm " + APP_VERSION + " · APK DiniKutuphane-" + APP_VERSION + ".apk";
