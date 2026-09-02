@@ -475,7 +475,7 @@ function exitApp() {
 }
 
 function appDownloadUrl() {
-  return "https://dini-kutuphane.onrender.com/apk/DiniKutuphane.apk";
+  return "https://dini-kutuphane.onrender.com/apk/DiniKutuphane-" + APP_VERSION + ".apk";
 }
 
 async function shareApp() {
@@ -1389,5 +1389,9 @@ if ("serviceWorker" in navigator) {
 
 load();
 
+const APP_VERSION = "v59";
 const verEl = document.getElementById("appVersion");
-if (verEl) verEl.textContent = "v59";
+if (verEl) {
+  verEl.textContent = "Sürüm " + APP_VERSION + " · APK DiniKutuphane-" + APP_VERSION + ".apk";
+  verEl.title = "Uygulama: " + APP_VERSION + " | APK: DiniKutuphane-" + APP_VERSION + ".apk";
+}
