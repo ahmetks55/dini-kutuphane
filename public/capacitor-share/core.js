@@ -1,1 +1,0 @@
-export const registerPlugin = window.Capacitor.registerPlugin.bind(window.Capacitor);

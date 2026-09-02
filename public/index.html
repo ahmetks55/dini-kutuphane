@@ -1,41 +1,41 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="tr">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, interactive-widget=resizes-content" />
   <meta name="theme-color" content="#0f5132" />
-  <meta name="apple-mobile-web-app-title" content="DİNİ KÜTÜPHANE" />
+  <meta name="apple-mobile-web-app-title" content="DÄ°NÄ° KÃœTÃœPHANE" />
   <link rel="manifest" href="manifest.json" />
   <link rel="icon" type="image/png" href="icon-192.png" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
-  <title>DİNİ KÜTÜPHANE</title>
+  <title>DÄ°NÄ° KÃœTÃœPHANE</title>
   <link rel="stylesheet" href="styles.css?v=32" />
 </head>
 <body>
   <header class="topbar">
     <div class="topbar-left">
-      <button class="btn btn-ghost icon-btn" onclick="toggleCatMenu()" title="Kategoriler" aria-label="Menü">☰</button>
+      <button class="btn btn-ghost icon-btn" onclick="toggleCatMenu()" title="Kategoriler" aria-label="MenÃ¼">â˜°</button>
     </div>
     <div class="brand" onclick="goHome()">
-      <span class="brand-icon">📖</span>
+      <span class="brand-icon">ğŸ“–</span>
       <div class="brand-text">
-        <h1>Dini Kütüphane</h1>
-        <p>Dualar · Sureler · Mevlid · Ilahiler · Kasideler · Salavatlar</p>
+        <h1>Dini KÃ¼tÃ¼phane</h1>
+        <p>Dualar Â· Sureler Â· Mevlid Â· Ilahiler Â· Kasideler Â· Salavatlar</p>
       </div>
     </div>
     <div class="top-actions">
       <div class="upload-wrap">
-        <button class="btn btn-primary" id="uploadBtn" onclick="toggleUploadMenu()">＋ <span class="btn-label">Yeni</span> <span class="caret">▾</span></button>
+        <button class="btn btn-primary" id="uploadBtn" onclick="toggleUploadMenu()">ï¼‹ <span class="btn-label">Yeni</span> <span class="caret">â–¾</span></button>
         <div class="upload-menu" id="uploadMenu" hidden>
-          <button class="upload-menu-item" onclick="closeUploadMenu(); promptNewFolder()"><span class="b-icon">📁</span><span class="b-label">Klasor Ekle</span></button>
-          <button class="upload-menu-item" onclick="closeUploadMenu(); openUpload()"><span class="b-icon">📄</span><span class="b-label">Dosya Yükle</span></button>
-          <button class="upload-menu-item" onclick="closeUploadMenu(); openScan()"><span class="b-icon">📷</span><span class="b-label">Kamera ile Tara</span></button>
-          <button class="upload-menu-item" onclick="closeUploadMenu(); openNewText()"><span class="b-icon">✏️</span><span class="b-label">Yeni Metin</span></button>
+          <button class="upload-menu-item" onclick="closeUploadMenu(); promptNewFolder()"><span class="b-icon">ğŸ“</span><span class="b-label">Klasor Ekle</span></button>
+          <button class="upload-menu-item" onclick="closeUploadMenu(); openUpload()"><span class="b-icon">ğŸ“„</span><span class="b-label">Dosya YÃ¼kle</span></button>
+          <button class="upload-menu-item" onclick="closeUploadMenu(); openScan()"><span class="b-icon">ğŸ“·</span><span class="b-label">Kamera ile Tara</span></button>
+          <button class="upload-menu-item" onclick="closeUploadMenu(); openNewText()"><span class="b-icon">âœï¸</span><span class="b-label">Yeni Metin</span></button>
         </div>
       </div>
-      <button class="btn btn-ghost" onclick="openSearch()"><span class="b-icon">🔍</span><span class="b-label">Ara</span></button>
-      <button class="btn btn-ghost" onclick="shareApp()" title="Paylaş"><span class="b-icon">📤</span><span class="b-label">Paylaş</span></button>
-      <button class="btn btn-ghost" onclick="exitApp()" title="Çıkış"><span class="b-icon">🚪</span><span class="b-label">Çıkış</span></button>
+      <button class="btn btn-ghost" onclick="openSearch()"><span class="b-icon">ğŸ”</span><span class="b-label">Ara</span></button>
+      <button class="btn btn-ghost" onclick="shareApp()" title="PaylaÅŸ"><span class="b-icon">ğŸ“¤</span><span class="b-label">PaylaÅŸ</span></button>
+      <button class="btn btn-ghost" onclick="exitApp()" title="Ã‡Ä±kÄ±ÅŸ"><span class="b-icon">ğŸšª</span><span class="b-label">Ã‡Ä±kÄ±ÅŸ</span></button>
     </div>
     <nav class="cat-menu" id="catMenu" hidden></nav>
   </header>
@@ -50,12 +50,7 @@
   </main>
 
   <div class="toast" id="toast"></div>
-  <div class="share-diag" id="shareDiag" hidden>
-    <div class="share-diag-title">Paylaşım Durumu</div>
-    <pre class="share-diag-body" id="shareDiagBody"></pre>
-    <button class="btn btn-ghost" onclick="closeShareDiag()">Kapat</button>
-  </div>
-  <div class="app-version" id="appVersion" title="Uygulama sürümü"></div>
+  <div class="app-version" id="appVersion" title="Uygulama sÃ¼rÃ¼mÃ¼"></div>
 
   <!-- File viewer modal -->
   <div class="modal-overlay" id="viewerModal" hidden>
@@ -63,7 +58,7 @@
       <div class="modal-head">
         <span></span>
         <div class="modal-title" id="viewerTitle">Dosya</div>
-        <button class="btn btn-ghost icon-btn" onclick="openViewerMenu(event)" title="İşlemler" aria-label="İşlemler">⋮</button>
+        <button class="btn btn-ghost icon-btn" onclick="openViewerMenu(event)" title="Ä°ÅŸlemler" aria-label="Ä°ÅŸlemler">â‹®</button>
       </div>
       <div class="viewer-body" id="viewerBody"></div>
     </div>
@@ -75,11 +70,11 @@
       <div class="modal-head">
         <span></span>
         <div class="modal-title" id="videoTitle">Video</div>
-        <button class="btn btn-ghost icon-btn" onclick="closeVideo()" title="Kapat" aria-label="Kapat">✕</button>
+        <button class="btn btn-ghost icon-btn" onclick="closeVideo()" title="Kapat" aria-label="Kapat">âœ•</button>
       </div>
       <div class="video-body">
         <div class="video-frame" id="videoFrame"></div>
-        <a class="video-open-link" id="videoOpenLink" target="_blank" rel="noopener">İzleyemezsen dışarıda aç</a>
+        <a class="video-open-link" id="videoOpenLink" target="_blank" rel="noopener">Ä°zleyemezsen dÄ±ÅŸarÄ±da aÃ§</a>
       </div>
     </div>
   </div>
@@ -88,9 +83,9 @@
   <div class="modal-overlay" id="webModal" hidden>
     <div class="modal web">
       <div class="modal-head">
-        <button class="btn btn-ghost icon-btn" onclick="closeWeb()" title="Kapat" aria-label="Kapat">✕</button>
-        <div class="modal-title" id="webTitle">Bağlantı</div>
-        <a class="video-open-link" id="webOpenLink" target="_blank" rel="noopener">Dışarıda aç</a>
+        <button class="btn btn-ghost icon-btn" onclick="closeWeb()" title="Kapat" aria-label="Kapat">âœ•</button>
+        <div class="modal-title" id="webTitle">BaÄŸlantÄ±</div>
+        <a class="video-open-link" id="webOpenLink" target="_blank" rel="noopener">DÄ±ÅŸarÄ±da aÃ§</a>
       </div>
       <div class="web-body">
         <iframe class="web-frame" id="webFrame" sandbox="allow-scripts allow-same-origin allow-popups" referrerpolicy="no-referrer"></iframe>
@@ -102,16 +97,16 @@
   <div class="modal-overlay" id="renameModal" hidden>
     <div class="modal">
       <div class="modal-head">
-        <button class="btn btn-ghost icon-btn" onclick="closeRename()">✕</button>
-        <div class="modal-title">Yeniden Adlandır</div>
+        <button class="btn btn-ghost icon-btn" onclick="closeRename()">âœ•</button>
+        <div class="modal-title">Yeniden AdlandÄ±r</div>
         <span></span>
       </div>
       <div class="modal-body">
         <label class="hint small" for="renameInput">Yeni ad:</label>
-        <input type="text" id="renameInput" placeholder="Yeni ad (uzantıyla)" autocomplete="off" />
+        <input type="text" id="renameInput" placeholder="Yeni ad (uzantÄ±yla)" autocomplete="off" />
         <div class="btn-row">
           <button class="btn btn-primary" onclick="doRename()">Kaydet</button>
-          <button class="btn btn-ghost" onclick="closeRename()">Vazgeç</button>
+          <button class="btn btn-ghost" onclick="closeRename()">VazgeÃ§</button>
         </div>
       </div>
     </div>
@@ -121,15 +116,15 @@
   <div class="modal-overlay" id="editModal" hidden>
     <div class="modal viewer">
       <div class="modal-head">
-        <button class="btn btn-ghost icon-btn" onclick="closeEdit()">✕</button>
-        <div class="modal-title" id="editTitle">Düzenle</div>
+        <button class="btn btn-ghost icon-btn" onclick="closeEdit()">âœ•</button>
+        <div class="modal-title" id="editTitle">DÃ¼zenle</div>
         <span></span>
       </div>
       <div class="modal-body">
-        <textarea id="editContent" class="newtext-area" rows="14" placeholder="Metni buradan düzenleyin..."></textarea>
+        <textarea id="editContent" class="newtext-area" rows="14" placeholder="Metni buradan dÃ¼zenleyin..."></textarea>
         <div class="btn-row">
-          <button class="btn btn-primary" onclick="doEdit()">💾 Kaydet</button>
-          <button class="btn btn-ghost" onclick="closeEdit()">Vazgeç</button>
+          <button class="btn btn-primary" onclick="doEdit()">ğŸ’¾ Kaydet</button>
+          <button class="btn btn-ghost" onclick="closeEdit()">VazgeÃ§</button>
         </div>
       </div>
     </div>
@@ -139,17 +134,17 @@
   <div class="modal-overlay" id="moveModal" hidden>
     <div class="modal">
       <div class="modal-head">
-        <button class="btn btn-ghost icon-btn" onclick="closeMoveModal()">✕</button>
-        <div class="modal-title">Taşı</div>
+        <button class="btn btn-ghost icon-btn" onclick="closeMoveModal()">âœ•</button>
+        <div class="modal-title">TaÅŸÄ±</div>
         <span></span>
       </div>
       <div class="modal-body">
         <p class="hint">Dosya: <strong id="moveTarget"></strong></p>
-        <label class="hint small" for="moveFolder">Hedef klasör:</label>
+        <label class="hint small" for="moveFolder">Hedef klasÃ¶r:</label>
         <select id="moveFolder" class="move-folder"></select>
         <div class="btn-row">
-          <button class="btn btn-primary" onclick="doMove()">Taşı</button>
-          <button class="btn btn-ghost" onclick="closeMoveModal()">Vazgeç</button>
+          <button class="btn btn-primary" onclick="doMove()">TaÅŸÄ±</button>
+          <button class="btn btn-ghost" onclick="closeMoveModal()">VazgeÃ§</button>
         </div>
       </div>
     </div>
@@ -159,16 +154,16 @@
   <div class="modal-overlay" id="searchModal" hidden>
     <div class="modal">
       <div class="modal-head">
-        <button class="btn btn-ghost icon-btn" onclick="closeSearch()">✕</button>
+        <button class="btn btn-ghost icon-btn" onclick="closeSearch()">âœ•</button>
         <div class="modal-title">Ara</div>
         <span></span>
       </div>
       <div class="modal-body">
         <div class="search-input-wrap">
-          <span class="search-input-icon">🔍</span>
+          <span class="search-input-icon">ğŸ”</span>
           <input type="search" id="searchInput" placeholder="Kitap, dua veya metin ara..." autocomplete="off" />
         </div>
-        <p class="hint small">Dosya ve klasör adlarında, ayrıca metin (.txt) ve .md dosyalarının içeriğinde arar.</p>
+        <p class="hint small">Dosya ve klasÃ¶r adlarÄ±nda, ayrÄ±ca metin (.txt) ve .md dosyalarÄ±nÄ±n iÃ§eriÄŸinde arar.</p>
         <div class="search-results" id="searchResults"></div>
       </div>
     </div>
@@ -178,18 +173,18 @@
   <div class="modal-overlay" id="scanModal" hidden>
     <div class="modal">
       <div class="modal-head">
-        <button class="btn btn-ghost icon-btn" onclick="closeScan()">✕</button>
+        <button class="btn btn-ghost icon-btn" onclick="closeScan()">âœ•</button>
         <div class="modal-title">Belge Tara</div>
         <span></span>
       </div>
       <div class="modal-body">
         <div class="scan-actions-grid">
           <div class="scan-form-side">
-            <p class="hint">Hedef klasör: <strong id="scanTarget">Ana Kitaplik</strong></p>
-            <button class="btn btn-primary scan-capture-btn" onclick="document.getElementById('scanInput').click()">📷 Kamera ile Çek</button>
+            <p class="hint">Hedef klasÃ¶r: <strong id="scanTarget">Ana Kitaplik</strong></p>
+            <button class="btn btn-primary scan-capture-btn" onclick="document.getElementById('scanInput').click()">ğŸ“· Kamera ile Ã‡ek</button>
             <input type="file" id="scanInput" accept="image/*" capture="environment" hidden />
-            <input type="text" id="scanName" placeholder="Dosya adı (ör. Tarama-1)" />
-            <p class="hint small" id="scanOcrHint" hidden>Önce "Tara (Önizleme)" ile metni tanıtın. Başka sayfa için tekrar "Kamera ile Çek" deyip yine önizleyin — metin alttakine eklenir. Sonra "Kaydet"e basın. PDF formatında doğrudan kaydedilir.</p>
+            <input type="text" id="scanName" placeholder="Dosya adÄ± (Ã¶r. Tarama-1)" />
+            <p class="hint small" id="scanOcrHint" hidden>Ã–nce "Tara (Ã–nizleme)" ile metni tanÄ±tÄ±n. BaÅŸka sayfa iÃ§in tekrar "Kamera ile Ã‡ek" deyip yine Ã¶nizleyin â€” metin alttakine eklenir. Sonra "Kaydet"e basÄ±n. PDF formatÄ±nda doÄŸrudan kaydedilir.</p>
             <div class="format-row">
               <label><input type="radio" name="sfmt" value="pdf" /> PDF (.pdf)</label>
               <label><input type="radio" name="sfmt" value="docx" checked /> Word (.docx)</label>
@@ -198,21 +193,21 @@
             <div class="format-row" id="scanLangRow">
               <label>OCR dili:</label>
               <select id="scanLang">
-                <option value="tur">Türkçe</option>
+                <option value="tur">TÃ¼rkÃ§e</option>
                 <option value="eng">English</option>
-                <option value="ara">العربية</option>
+                <option value="ara">Ø§Ù„Ø¹Ø±Ø¨ÙŠØ©</option>
               </select>
             </div>
             <p class="scan-progress" id="scanProgress" hidden></p>
             <div class="btn-row">
-              <button class="btn btn-ghost" id="scanOcrBtn" onclick="runScanOcr()">🔎 Tara (Önizleme)</button>
-              <button class="btn btn-primary" id="scanSaveBtn" onclick="saveScan()">💾 Kaydet</button>
-              <button class="btn btn-ghost" onclick="closeScan()">Vazgeç</button>
+              <button class="btn btn-ghost" id="scanOcrBtn" onclick="runScanOcr()">ğŸ” Tara (Ã–nizleme)</button>
+              <button class="btn btn-primary" id="scanSaveBtn" onclick="saveScan()">ğŸ’¾ Kaydet</button>
+              <button class="btn btn-ghost" onclick="closeScan()">VazgeÃ§</button>
             </div>
           </div>
           <div class="scan-form-side">
             <div id="scanStack" class="scan-stack" hidden></div>
-            <textarea id="scanText" class="scan-text" rows="12" placeholder="Tanınan metin burada görünecek; hataları düzelttikten sonra Kaydet'e basın." hidden></textarea>
+            <textarea id="scanText" class="scan-text" rows="12" placeholder="TanÄ±nan metin burada gÃ¶rÃ¼necek; hatalarÄ± dÃ¼zelttikten sonra Kaydet'e basÄ±n." hidden></textarea>
           </div>
         </div>
       </div>
@@ -223,12 +218,12 @@
   <div class="modal-overlay" id="cropModal" hidden>
     <div class="modal">
       <div class="modal-head">
-        <button class="btn btn-ghost icon-btn" onclick="closeCrop()">✕</button>
-        <div class="modal-title">Görseli Kırp</div>
+        <button class="btn btn-ghost icon-btn" onclick="closeCrop()">âœ•</button>
+        <div class="modal-title">GÃ¶rseli KÄ±rp</div>
         <span></span>
       </div>
       <div class="modal-body">
-        <p class="hint">Kutuyu taşıyın, köşelerden boyutlandırın. Dokunarak köşe seçip sürükleyin.</p>
+        <p class="hint">Kutuyu taÅŸÄ±yÄ±n, kÃ¶ÅŸelerden boyutlandÄ±rÄ±n. Dokunarak kÃ¶ÅŸe seÃ§ip sÃ¼rÃ¼kleyin.</p>
         <div id="cropStage" class="crop-stage">
           <img id="cropImage" alt="" />
           <div id="cropRect" class="crop-rect">
@@ -237,8 +232,8 @@
           </div>
         </div>
         <div class="btn-row">
-          <button class="btn btn-primary" onclick="confirmCrop()">✂ Kırp</button>
-          <button class="btn btn-ghost" onclick="closeCrop()">Vazgeç</button>
+          <button class="btn btn-primary" onclick="confirmCrop()">âœ‚ KÄ±rp</button>
+          <button class="btn btn-ghost" onclick="closeCrop()">VazgeÃ§</button>
         </div>
       </div>
     </div>
@@ -248,17 +243,17 @@
   <div class="modal-overlay" id="newTextModal" hidden>
     <div class="modal">
       <div class="modal-head">
-        <button class="btn btn-ghost icon-btn" onclick="closeNewText()">✕</button>
-        <div class="modal-title">Yeni Metin Dosyası</div>
+        <button class="btn btn-ghost icon-btn" onclick="closeNewText()">âœ•</button>
+        <div class="modal-title">Yeni Metin DosyasÄ±</div>
         <span></span>
       </div>
       <div class="modal-body">
-        <p class="hint">Hedef klasör: <strong id="newTextTarget">Ana Kitaplik</strong></p>
-        <input type="text" id="newTextName" placeholder="Dosya adı (uzantı gerekmez)" />
-        <textarea id="newTextContent" class="newtext-area" rows="14" placeholder="Metni buraya yazın veya yapıştırın..."></textarea>
+        <p class="hint">Hedef klasÃ¶r: <strong id="newTextTarget">Ana Kitaplik</strong></p>
+        <input type="text" id="newTextName" placeholder="Dosya adÄ± (uzantÄ± gerekmez)" />
+        <textarea id="newTextContent" class="newtext-area" rows="14" placeholder="Metni buraya yazÄ±n veya yapÄ±ÅŸtÄ±rÄ±n..."></textarea>
         <div class="btn-row">
-          <button class="btn btn-primary" onclick="saveNewText()">💾 Kaydet</button>
-          <button class="btn btn-ghost" onclick="closeNewText()">Vazgeç</button>
+          <button class="btn btn-primary" onclick="saveNewText()">ğŸ’¾ Kaydet</button>
+          <button class="btn btn-ghost" onclick="closeNewText()">VazgeÃ§</button>
         </div>
       </div>
     </div>
@@ -268,18 +263,18 @@
   <div class="modal-overlay" id="uploadModal" hidden>
     <div class="modal">
       <div class="modal-head">
-        <button class="btn btn-ghost icon-btn" onclick="closeUpload()">✕</button>
-        <div class="modal-title">Dosya Yükle</div>
+        <button class="btn btn-ghost icon-btn" onclick="closeUpload()">âœ•</button>
+        <div class="modal-title">Dosya YÃ¼kle</div>
         <span></span>
       </div>
       <div class="modal-body">
-        <p class="hint">Hedef klasör: <strong id="uploadTarget">Ana Kitaplik</strong></p>
+        <p class="hint">Hedef klasÃ¶r: <strong id="uploadTarget">Ana Kitaplik</strong></p>
         <input type="file" id="fileInput" multiple
           accept=".docx,.pdf,.doc,.txt,.md,.png,.jpg,.jpeg,.gif,.webp,.bmp" />
-        <p class="hint small">Word (.docx), PDF ve görsel (png/jpg) dosyalari yükleyebilirsiniz.</p>
+        <p class="hint small">Word (.docx), PDF ve gÃ¶rsel (png/jpg) dosyalari yÃ¼kleyebilirsiniz.</p>
         <div class="btn-row">
-          <button class="btn btn-primary" onclick="uploadFiles()">Yükle</button>
-          <button class="btn btn-ghost" onclick="closeUpload()">Vazgeç</button>
+          <button class="btn btn-primary" onclick="uploadFiles()">YÃ¼kle</button>
+          <button class="btn btn-ghost" onclick="closeUpload()">VazgeÃ§</button>
         </div>
       </div>
     </div>
@@ -287,10 +282,6 @@
 
   <script src="/vendor/mammoth/mammoth.browser.min.js"></script>
   <script src="/vendor/pdfjs/pdf.min.js"></script>
-  <script type="module">
-    import { Share } from './capacitor-share/index.js';
-    window.CapacitorShare = Share;
-  </script>
-  <script src="app.js?v=64"></script>
+  <script src="app.js?v=65"></script>
 </body>
 </html>
