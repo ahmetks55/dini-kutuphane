@@ -484,15 +484,23 @@ async function shareApp() {
   const text = "Dini Kütüphane - Dualar, Sureler, Mevlid, Ilahiler, Kasideler ve Salavatlar\n\u0130ndirme: " + apk;
   if (navigator.share) {
     try { await navigator.share({ title, text, url: apk }); return; }
-    catch (e) { if (e && e.name === "AbortError") return; }
+    catch (e) {
+      toast("WebShare: " + (e && e.name ? e.name : "hata"), "error");
+      if (e && e.name === "AbortError") return;
+    }
+  } else {
+    toast("navigator.share yok", "error");
   }
   if (window.CapacitorShare) {
     try {
       await window.CapacitorShare.share({ title, text, url: apk, dialogTitle: "Dini Kütüphane'yi paylaş" });
       return;
     } catch (e) {
+      toast("Native: " + (e && e.name ? e.name : "hata"), "error");
       if (e && e.name === "UserCanceledError") return;
     }
+  } else {
+    toast("CapacitorShare yok", "error");
   }
   try {
     await navigator.clipboard.writeText(text);
@@ -1382,4 +1390,4 @@ if ("serviceWorker" in navigator) {
 load();
 
 const verEl = document.getElementById("appVersion");
-if (verEl) verEl.textContent = "v58";
+if (verEl) verEl.textContent = "v59";
