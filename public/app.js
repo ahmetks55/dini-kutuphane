@@ -446,14 +446,52 @@ function go(p) {
 }
 function openFolder(rel) { go(rel); }
 function goHome() { go("/"); }
-window.addEventListener("popstate", () => {
-  const raw = decodeURIComponent(location.hash.replace(/^#/, ""));
-  const pathPart = raw.split(":f=")[0].replace(/^\//, "");
-  if (pathPart) return;
-  if (!document.getElementById("viewerModal").hidden) return;
-  history.pushState(null, "", location.hash || "#/");
-  load();
-});
+/* ---------------- Back button (Android) ---------------- */
+function isAnyModalOpen() {
+  const ids = ["viewerModal","videoModal","webModal","renameModal","editModal",
+    "moveModal","searchModal","scanModal","cropModal","newTextModal","uploadModal"];
+  return ids.some(id => {
+    const el = document.getElementById(id);
+    return el && !el.hidden;
+  });
+}
+function closeTopModal() {
+  if (!document.getElementById("viewerModal").hidden) { closeViewer(); return true; }
+  if (!document.getElementById("videoModal").hidden) { closeVideo(); return true; }
+  if (!document.getElementById("webModal").hidden) { closeWeb(); return true; }
+  if (!document.getElementById("renameModal").hidden) { closeRename(); return true; }
+  if (!document.getElementById("editModal").hidden) { closeEdit(); return true; }
+  if (!document.getElementById("moveModal").hidden) { closeMoveModal(); return true; }
+  if (!document.getElementById("searchModal").hidden) { closeSearch(); return true; }
+  if (!document.getElementById("scanModal").hidden) { closeScan(); return true; }
+  if (!document.getElementById("cropModal").hidden) { closeCrop(); return true; }
+  if (!document.getElementById("newTextModal").hidden) { closeNewText(); return true; }
+  if (!document.getElementById("uploadModal").hidden) { closeUpload(); return true; }
+  return false;
+}
+function getParentPath(p) {
+  if (!p) return "";
+  const parts = p.replace(/^\//, "").split("/");
+  parts.pop();
+  return parts.join("/");
+}
+
+function handleBackButton(e) {
+  if (e) e.preventDefault();
+  if (closeTopModal()) return;
+  if (state.path && state.path !== "/") {
+    go(getParentPath(state.path));
+    return;
+  }
+  if (!confirm("Uygulamadan çıkmak istediğinize emin misiniz?")) {
+    history.pushState(null, "", location.hash || "#/");
+    return;
+  }
+  try { window.close(); } catch (_) {}
+  setTimeout(() => { window.location.replace("exit.html"); }, 120);
+}
+window.addEventListener("popstate", handleBackButton);
+document.addEventListener("backbutton", handleBackButton, false);
 window.addEventListener("hashchange", () => {
   const raw = decodeURIComponent(location.hash.replace(/^#/, ""));
   const [pathPart, filePart] = raw.split(":f=");
@@ -1383,7 +1421,7 @@ if ("serviceWorker" in navigator) {
 
 load();
 
-const APP_VERSION = "v67";
+const APP_VERSION = "v68";
 const verEl = document.getElementById("appVersion");
 if (verEl) {
   verEl.textContent = "Sürüm " + APP_VERSION + " · APK DiniKutuphane-" + APP_VERSION + ".apk";
