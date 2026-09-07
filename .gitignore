@@ -6,5 +6,7 @@ android/app/release/
 android/capacitor-cordova-android-plugins/build/
 android/capacitor-android/build/
 android/app/src/main/assets/public/
+public/offline-data/
+public/vendor/
 *.log
 .DS_Store

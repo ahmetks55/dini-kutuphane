@@ -1,4 +1,4 @@
-const CACHE = "dini-kutuphane-v68";
+const CACHE = "dini-kutuphane-v70";
 const CORE = [
   "./",
   "./index.html",

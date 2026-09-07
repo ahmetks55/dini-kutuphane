@@ -49,6 +49,7 @@ function toast(msg, type) {
 
 /* ---------------- Category menu (hamburger) ---------------- */
 function triggerPrecache() {
+  if (window.__OFFLINE__) { toast("Bu surumde kitaplik APK icinde; onbellege gerek yok", "error"); return; }
   if (!("serviceWorker" in navigator)) { toast("Service worker desteklenmiyor", "error"); return; }
   if (!confirm("Tum kitaplik dosyalari indirilip cevrimdisi icin onbellege alinacak.\nBu islem veri kullanabilir ve biraz surebilir. Devam edilsin mi?")) return;
   navigator.serviceWorker.ready.then((reg) => {
@@ -115,7 +116,7 @@ async function load() {
   const grid = document.getElementById("grid");
   grid.innerHTML = '<p class="empty">Yukleniyor...</p>';
   try {
-    const res = await fetch("/api/tree?path=" + encodeURIComponent(state.path));
+    const res = await dapi("/api/tree?path=" + encodeURIComponent(state.path));
     if (!res.ok) throw new Error();
     const data = await res.json();
     state.items = data.items;
@@ -298,7 +299,7 @@ function closeRename() { document.getElementById("renameModal").hidden = true; }
 async function doRename() {
   const newName = document.getElementById("renameInput").value.trim();
   if (!newName) { toast("Yeni ad gerekli", "error"); return; }
-  const res = await fetch("/api/rename", {
+  const res = await dapi("/api/rename", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ path: renameRel, newName }),
@@ -314,6 +315,7 @@ async function doRename() {
 let editRel = "";
 function editFresh(rel) { return "/api/file?path=" + encodeURIComponent(rel) + "&_=" + Date.now(); }
 function invalidateFileCache(rel) {
+  if (window.__OFFLINE__) return Promise.resolve();
   const urls = ["/api/file?path=" + encodeURIComponent(rel), "/api/read?path=" + encodeURIComponent(rel)];
   if (!("caches" in window)) return Promise.resolve();
   return caches.keys().then((keys) =>
@@ -329,7 +331,7 @@ function openEdit(it, rel) {
   ta.value = "Yukleniyor...";
   document.getElementById("editModal").hidden = false;
   if (/\.docx$/i.test(it.name)) {
-    fetch(editFresh(rel))
+    dapi(editFresh(rel))
       .then((r) => (r.ok ? r.arrayBuffer() : Promise.reject()))
       .then((buf) => mammoth.convertToHtml({ arrayBuffer: buf }))
       .then((res) => {
@@ -346,7 +348,7 @@ function openEdit(it, rel) {
         toast("Icerik okunamadi", "error");
       });
   } else {
-    fetch("/api/read?path=" + encodeURIComponent(rel) + "&_=" + Date.now())
+    dapi("/api/read?path=" + encodeURIComponent(rel) + "&_=" + Date.now())
       .then((r) => (r.ok ? r.text() : Promise.reject()))
       .then((t) => { ta.value = t; })
       .catch(() => {
@@ -360,7 +362,7 @@ function closeEdit() { document.getElementById("editModal").hidden = true; }
 async function doEdit() {
   const content = document.getElementById("editContent").value;
   const isDocx = /\.docx$/i.test(editRel);
-  const res = await fetch("/api/update", {
+  const res = await dapi("/api/update", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ path: editRel, content, format: isDocx ? "docx" : undefined }),
@@ -402,7 +404,7 @@ function collectFolders(items, acc, prefix) {
 async function loadFolderOptions() {
   const select = document.getElementById("moveFolder");
   try {
-    const res = await fetch("/api/tree?path=");
+    const res = await dapi("/api/tree?path=");
     const data = await res.json().catch(() => ({}));
     const opts = [{ name: "", label: "🏠 Ana Kitaplik" }, ...collectFolders(data.items || [], [], "")];
     const cur = state.moveRel.split("/").slice(0, -1).join("/");
@@ -424,7 +426,7 @@ function closeMoveModal() { document.getElementById("moveModal").hidden = true; 
 async function doMove() {
   const dest = document.getElementById("moveFolder").value;
   if (!state.moveItem) return;
-  const res = await fetch("/api/move", {
+  const res = await dapi("/api/move", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ path: state.moveRel, dest }),
@@ -549,7 +551,7 @@ async function shareApp() {
 
 async function deleteItem(it, rel) {
   if (!confirm(`"${it.name}" silinsin mi?\nBu islem geri alinamaz.`)) return;
-  const res = await fetch("/api/item?path=" + encodeURIComponent(rel), { method: "DELETE" });
+  const res = await dapi("/api/item?path=" + encodeURIComponent(rel), { method: "DELETE" });
   if (res.ok) { toast("Silindi: " + it.name); load(); }
   else toast("Silme hatasi", "error");
 }
@@ -562,7 +564,7 @@ function promptNewFolder() {
 }
 
 async function createFolder(name) {
-  const res = await fetch("/api/folder", {
+  const res = await dapi("/api/folder", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ path: state.path, name }),
@@ -601,7 +603,7 @@ async function uploadFiles() {
     const fd = new FormData();
     fd.append("path", state.uploadPath);
     fd.append("file", f);
-    const res = await fetch("/api/upload", { method: "POST", body: fd });
+    const res = await dapi("/api/upload", { method: "POST", body: fd });
     if (res.ok) ok++;
   }
   toast(ok + "/" + files.length + " dosya yuklendi");
@@ -624,7 +626,7 @@ async function saveNewText() {
   const name = nameEl.value.trim();
   if (!name) { toast("Dosya adi gerekli", "error"); nameEl.focus(); return; }
   const content = document.getElementById("newTextContent").value;
-  const res = await fetch("/api/write", {
+  const res = await dapi("/api/write", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ path: state.path, name, content }),
@@ -693,7 +695,7 @@ async function runScanOcr() {
     fd.append("lang", lang);
     fd.append("mode", "preview");
     fd.append("file", state.scanOcrFile || state.scanFile);
-    const res = await fetch("/api/scan", { method: "POST", body: fd });
+    const res = await dapi("/api/scan", { method: "POST", body: fd });
     const data = await res.json().catch(() => ({}));
     if (res.ok) {
       state.scanTextReady = true;
@@ -733,13 +735,13 @@ async function saveScan() {
       for (const f of state.scanFiles) fd.append("file", f);
       prog.hidden = false;
       prog.textContent = "PDF olusturuluyor (" + state.scanFiles.length + " sayfa)...";
-      res = await fetch("/api/scan", { method: "POST", body: fd });
+      res = await dapi("/api/scan", { method: "POST", body: fd });
     } else {
       if (!state.scanTextReady) { toast("Once Tara (Onizleme) butonuna basin", "error"); return; }
       const text = document.getElementById("scanText").value;
       prog.hidden = false;
       prog.textContent = "Kaydediliyor...";
-      res = await fetch("/api/scan", {
+      res = await dapi("/api/scan", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ path: state.scanPath, name, format: fmt, content: text }),
@@ -778,7 +780,7 @@ async function runSearch() {
   if (!q) { box.innerHTML = ""; return; }
   box.innerHTML = '<p class="search-loading">Araniyor...</p>';
   try {
-    const res = await fetch("/api/search?q=" + encodeURIComponent(q));
+    const res = await dapi("/api/search?q=" + encodeURIComponent(q));
     const data = await res.json().catch(() => ({}));
     if (!res.ok) { box.innerHTML = '<p class="empty">Arama yapilamadi.</p>'; return; }
     const items = data.items || [];
@@ -812,6 +814,8 @@ let viewingItem = null;
 
 function fileUrl(rel) { return "/api/file?path=" + encodeURIComponent(rel); }
 
+function viewerSrc(rel) { return window.__OFFLINE__ ? window.offlineFileUrl(rel) : Promise.resolve(fileUrl(rel)); }
+
 function openFile(item, rel) {
   viewingRel = rel;
   viewingItem = item;
@@ -824,13 +828,17 @@ function openFile(item, rel) {
 
   const ext = (item.ext || "").toLowerCase();
   if ([".png", ".jpg", ".jpeg", ".gif", ".webp", ".bmp"].includes(ext)) {
-    body.innerHTML = `<img src="${fileUrl(rel)}" alt="${esc(item.name)}" />`;
+    body.innerHTML = `<img alt="${esc(item.name)}" />`;
+    viewerSrc(rel).then((u) => { body.querySelector("img").src = u; })
+      .catch(() => { body.innerHTML = '<p class="viewer-loading">Gorsel okunamadi.</p>'; });
   } else if (ext === ".pdf") {
     viewPdf(rel);
   } else if (ext === ".docx") {
     viewDocx(rel);
   } else {
-    body.innerHTML = `<iframe src="${fileUrl(rel)}"></iframe>`;
+    body.innerHTML = '<iframe src="about:blank"></iframe>';
+    viewerSrc(rel).then((u) => { body.querySelector("iframe").src = u; })
+      .catch(() => { body.innerHTML = '<p class="viewer-loading">Dosya goruntulenemedi.</p>'; });
   }
 }
 
@@ -839,7 +847,7 @@ async function viewPdf(rel) {
   try {
     if (typeof pdfjsLib === "undefined") throw new Error("PDF kutuphanesi yuklenmedi");
     pdfjsLib.GlobalWorkerOptions.workerSrc = "/vendor/pdfjs/pdf.worker.min.js";
-    const res = await fetch(fileUrl(rel) + "&_=" + Date.now());
+    const res = await dapi(fileUrl(rel) + "&_=" + Date.now());
     const buf = await res.arrayBuffer();
     const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
     body.innerHTML = '<div class="pdf-body"></div>';
@@ -861,7 +869,7 @@ async function viewPdf(rel) {
       addPdfLinkOverlays(page, vp, pageWrap, canvas);
     }
   } catch (e) {
-    body.innerHTML = '<div class="pdf-body"><p class="viewer-loading">PDF goruntulenemedi. <a class="btn btn-primary" href="' + fileUrl(rel) + '" download>Indir</a></p></div>';
+    body.innerHTML = '<div class="pdf-body"><p class="viewer-loading">PDF goruntulenemedi. <a class="btn btn-primary" href="#" onclick="downloadCurrent(); return false;">Indir</a></p></div>';
   }
 }
 
@@ -990,7 +998,7 @@ function closeWeb() {
 async function viewDocx(rel) {
   const body = document.getElementById("viewerBody");
   try {
-    const res = await fetch(fileUrl(rel) + "&_=" + Date.now());
+    const res = await dapi(fileUrl(rel) + "&_=" + Date.now());
     const buf = await res.arrayBuffer();
     const result = await mammoth.convertToHtml({ arrayBuffer: buf });
     const isOtt = /osmanlica|osmanlıca/i.test(rel);
@@ -1051,6 +1059,7 @@ function closeViewer() {
   if (location.hash.includes(":f=")) history.replaceState(null, "", "#/" + state.path);
 }
 function downloadCurrent() {
+  if (window.__OFFLINE__) { if (viewingRel) window.offlineDownload(viewingRel, (viewingItem && viewingItem.name) || ""); return; }
   if (viewingRel) window.open("/api/download?path=" + encodeURIComponent(viewingRel), "_blank");
 }
 
@@ -1399,7 +1408,7 @@ document.addEventListener("keydown", (e) => {
   if (e.key === "Escape") { closeViewer(); closeUpload(); closeScan(); closeCrop(); closeItemMenu(); closeViewerMenu(); closeSearch(); closeMoveModal(); closeNewText(); closeRename(); closeEdit(); closeCatMenu(); closeUploadMenu(); }
 });
 
-if ("serviceWorker" in navigator) {
+if (!window.__OFFLINE__ && "serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     navigator.serviceWorker.register("sw.js").catch(() => {});
   });
@@ -1421,7 +1430,7 @@ if ("serviceWorker" in navigator) {
 
 load();
 
-const APP_VERSION = "v68";
+const APP_VERSION = "v70";
 const verEl = document.getElementById("appVersion");
 if (verEl) {
   verEl.textContent = "Sürüm " + APP_VERSION + " · APK DiniKutuphane-" + APP_VERSION + ".apk";
