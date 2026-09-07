@@ -1,4 +1,4 @@
-const state = {
+﻿const state = {
   path: "",
   items: [],
   uploadPath: "",
@@ -437,14 +437,13 @@ async function doMove() {
 }
 
 /* ---------------- Navigation ---------------- */
-let navLock = 0;
+let suppressNextHash = false;
 function go(p) {
   if (window.__OFFLINE__) {
     const clean = p ? String(p).replace(/^\/+/, "") : "";
-    const prev = state.path || "";
     state.path = clean;
-    navLock = Date.now();
-    try { history.pushState({ dk: 1, prev }, "", "#/" + clean); } catch (_) {}
+    suppressNextHash = true;
+    try { history.pushState({ dk: 1 }, "", "#/" + clean); } catch (_) {}
     load();
     return;
   }
@@ -488,42 +487,22 @@ function getParentPath(p) {
   return parts.join("/");
 }
 
-function handleBackButton(e) {
-  if (e) e.preventDefault();
-  if (window.__OFFLINE__ && navLock && Date.now() - navLock < 500) { navLock = 0; return; }
+function handleBackButton() {
   if (closeTopModal()) return;
-  if (window.__OFFLINE__) {
-    const st = (e && e.state) || {};
-    if (st.dk) {
-      state.path = st.prev || "";
-      navLock = Date.now();
-      load();
-      return;
-    }
-    if (!confirm("Uygulamadan çıkmak istediğinize emin misiniz?")) {
-      navLock = Date.now();
-      try { history.pushState({ sentinel: true }, "", location.hash || "#/"); } catch (_) {}
-      return;
-    }
-    try { window.close(); } catch (_) {}
-    setTimeout(() => { window.location.replace("exit.html"); }, 120);
-    return;
-  }
   if (state.path && state.path !== "/") {
     go(getParentPath(state.path));
     return;
   }
-  if (!confirm("Uygulamadan çıkmak istediğinize emin misiniz?")) {
-    history.pushState(null, "", location.hash || "#/");
-    return;
-  }
+  if (!confirm("Uygulamadan çıkmak istediğinize emin misiniz?")) return;
+  if (window.dkBridge) { try { window.dkBridge.exit(); } catch (_) {} return; }
   try { window.close(); } catch (_) {}
   setTimeout(() => { window.location.replace("exit.html"); }, 120);
 }
 window.addEventListener("popstate", handleBackButton);
+window.addEventListener("dknativeback", handleBackButton);
 document.addEventListener("backbutton", handleBackButton, false);
 window.addEventListener("hashchange", () => {
-  if (window.__OFFLINE__ && navLock && Date.now() - navLock < 800) { navLock = 0; return; }
+  if (window.__OFFLINE__ && suppressNextHash) { suppressNextHash = false; return; }
   const raw = decodeURIComponent(location.hash.replace(/^#/, ""));
   const [pathPart, filePart] = raw.split(":f=");
   state.path = pathPart.replace(/^\//, "");
@@ -539,6 +518,7 @@ window.addEventListener("hashchange", () => {
 });
 function exitApp() {
   if (!confirm("Uygulamadan çıkmak istediğinize emin misiniz?")) return;
+  if (window.dkBridge) { try { window.dkBridge.exit(); } catch (_) {} return; }
   try { window.close(); } catch (e) {}
   setTimeout(() => { window.location.replace("exit.html"); }, 120);
 }
@@ -866,6 +846,17 @@ function openFile(item, rel) {
     viewPdf(rel);
   } else if (ext === ".docx") {
     viewDocx(rel);
+  } else if ([".mp4", ".webm", ".ogg", ".3gp", ".m4v", ".mov"].includes(ext)) {
+    body.innerHTML = '<video controls playsinline style="display:block;width:100%;height:100%;max-height:100%;background:#000;"></video>';
+    const v = body.querySelector("video");
+    const tryPlay = (u) => {
+      if (!u || !v) return;
+      v.src = u;
+      const p = v.play();
+      if (p && typeof p.catch === "function") p.catch(() => {});
+    };
+    const src = window.__OFFLINE__ ? window.offlineFileUrl(rel) : Promise.resolve(fileUrl(rel));
+    src.then(tryPlay).catch(() => { body.innerHTML = '<p class="viewer-loading">Video okunamadi.</p>'; });
   } else {
     body.innerHTML = '<iframe src="about:blank"></iframe>';
     viewerSrc(rel).then((u) => { body.querySelector("iframe").src = u; })
@@ -1461,7 +1452,7 @@ if (!window.__OFFLINE__ && "serviceWorker" in navigator) {
 
 load();
 
-const APP_VERSION = "v71";
+const APP_VERSION = "v72";
 const verEl = document.getElementById("appVersion");
 if (verEl) {
   verEl.textContent = "Sürüm " + APP_VERSION + " · APK DiniKutuphane-" + APP_VERSION + ".apk";
