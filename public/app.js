@@ -437,7 +437,17 @@ async function doMove() {
 }
 
 /* ---------------- Navigation ---------------- */
+let navLock = 0;
 function go(p) {
+  if (window.__OFFLINE__) {
+    const clean = p ? String(p).replace(/^\/+/, "") : "";
+    const prev = state.path || "";
+    state.path = clean;
+    navLock = Date.now();
+    try { history.pushState({ dk: 1, prev }, "", "#/" + clean); } catch (_) {}
+    load();
+    return;
+  }
   const h = p ? "/" + p : "/";
   if (location.hash === "#" + h) {
     state.path = p;
@@ -480,7 +490,25 @@ function getParentPath(p) {
 
 function handleBackButton(e) {
   if (e) e.preventDefault();
+  if (window.__OFFLINE__ && navLock && Date.now() - navLock < 500) { navLock = 0; return; }
   if (closeTopModal()) return;
+  if (window.__OFFLINE__) {
+    const st = (e && e.state) || {};
+    if (st.dk) {
+      state.path = st.prev || "";
+      navLock = Date.now();
+      load();
+      return;
+    }
+    if (!confirm("Uygulamadan çıkmak istediğinize emin misiniz?")) {
+      navLock = Date.now();
+      try { history.pushState({ sentinel: true }, "", location.hash || "#/"); } catch (_) {}
+      return;
+    }
+    try { window.close(); } catch (_) {}
+    setTimeout(() => { window.location.replace("exit.html"); }, 120);
+    return;
+  }
   if (state.path && state.path !== "/") {
     go(getParentPath(state.path));
     return;
@@ -495,6 +523,7 @@ function handleBackButton(e) {
 window.addEventListener("popstate", handleBackButton);
 document.addEventListener("backbutton", handleBackButton, false);
 window.addEventListener("hashchange", () => {
+  if (window.__OFFLINE__ && navLock && Date.now() - navLock < 800) { navLock = 0; return; }
   const raw = decodeURIComponent(location.hash.replace(/^#/, ""));
   const [pathPart, filePart] = raw.split(":f=");
   state.path = pathPart.replace(/^\//, "");
@@ -824,7 +853,9 @@ function openFile(item, rel) {
   body.innerHTML = '<p class="viewer-loading">Yukleniyor...</p>';
   document.getElementById("viewerModal").hidden = false;
   document.body.style.overflow = "hidden";
-  location.hash = (state.path ? "/" + state.path : "/") + ":f=" + encodeURIComponent(item.name);
+  if (!window.__OFFLINE__) {
+    location.hash = (state.path ? "/" + state.path : "/") + ":f=" + encodeURIComponent(item.name);
+  }
 
   const ext = (item.ext || "").toLowerCase();
   if ([".png", ".jpg", ".jpeg", ".gif", ".webp", ".bmp"].includes(ext)) {
@@ -1056,7 +1087,7 @@ function closeViewer() {
   viewingRel = null;
   viewingItem = null;
   closeViewerMenu();
-  if (location.hash.includes(":f=")) history.replaceState(null, "", "#/" + state.path);
+  if (!window.__OFFLINE__ && location.hash.includes(":f=")) history.replaceState(null, "", "#/" + state.path);
 }
 function downloadCurrent() {
   if (window.__OFFLINE__) { if (viewingRel) window.offlineDownload(viewingRel, (viewingItem && viewingItem.name) || ""); return; }
@@ -1430,7 +1461,7 @@ if (!window.__OFFLINE__ && "serviceWorker" in navigator) {
 
 load();
 
-const APP_VERSION = "v70";
+const APP_VERSION = "v71";
 const verEl = document.getElementById("appVersion");
 if (verEl) {
   verEl.textContent = "Sürüm " + APP_VERSION + " · APK DiniKutuphane-" + APP_VERSION + ".apk";
