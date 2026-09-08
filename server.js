@@ -56,6 +56,18 @@ function resolveSafe(rel) {
   return target;
 }
 
+function sanitizeFilename(name, fallback) {
+  const cleaned = String(name || "")
+    .replace(/[\u0000-\u001f\u007f]/g, "")
+    .replace(/[\/\\]+/g, "/")
+    .split("/")
+    .pop()
+    .trim();
+  const safe = cleaned.replace(/^\.+/, "");
+  if (!safe || safe === "." || safe === "..") return fallback;
+  return safe;
+}
+
 function compareNames(a, b) {
   return a.name.localeCompare(b.name, "tr", { sensitivity: "base" });
 }
@@ -183,8 +195,17 @@ const upload = multer({
       }
     },
     filename: (req, file, cb) => {
-      const original = Buffer.from(file.originalname, "latin1").toString("utf8");
-      cb(null, original);
+      try {
+        const original = Buffer.from(file.originalname, "latin1").toString("utf8");
+        const safe = sanitizeFilename(original, "dosya-" + Date.now());
+        const dest = resolveSafe(req.body.path || "");
+        if (fs.existsSync(path.join(dest, safe))) {
+          return cb(new Error("Bu isimde bir dosya zaten var"));
+        }
+        cb(null, safe);
+      } catch (e) {
+        cb(e);
+      }
     },
   }),
   limits: { fileSize: 100 * 1024 * 1024 },
@@ -385,7 +406,9 @@ app.post("/api/scan", scanUpload.array("file", 20), async (req, res) => {
     }
 
     if (!name || !String(name).trim()) return res.status(400).json({ error: "Dosya adi gerekli" });
-    const baseName = String(name).replace(/\.(pdf|docx|txt)$/i, "");
+    const nameStr = String(name);
+    if (/[\\/:*?"<>|]/.test(nameStr)) return res.status(400).json({ error: "Gecersiz dosya adi" });
+    const baseName = nameStr.replace(/\.(pdf|docx|txt)$/i, "");
     const target = path.join(resolveSafe(rel || ""), baseName + "." + fmt);
     if (fs.existsSync(target)) return res.status(409).json({ error: "Bu isimde bir dosya zaten var" });
 

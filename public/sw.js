@@ -3,13 +3,17 @@ const CORE = [
   "./",
   "./index.html",
   "./exit.html",
-  "./styles.css?v=72",
-  "./app.js?v=72",
+  "./styles.css?v=73",
+  "./offline.js?v=73",
+  "./app.js?v=73",
   "./manifest.json",
   "./icon-192.png",
   "./apple-touch-icon.png",
   "./fonts/AmiriQuran-Regular.ttf",
-  "./fonts/NotoNaskhArabic-Regular.ttf"
+  "./fonts/NotoNaskhArabic-Regular.ttf",
+  "/vendor/mammoth/mammoth.browser.min.js",
+  "/vendor/pdfjs/pdf.min.js",
+  "/vendor/pdfjs/pdf.worker.min.js"
 ];
 
 self.addEventListener("install", (e) => {
