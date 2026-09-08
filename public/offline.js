@@ -65,14 +65,80 @@
   /* overlay dosya islemleri */
   function overlayGet(rel) { return idbGet("files", rel); }
   function overlayPut(rel, blob, ext, size) {
+    bustCaches();
     return idbPut("files", rel, { blob, ext: ext || '', size: size == null ? blob.size : size, mtime: Date.now() });
   }
-  function overlayDelete(rel) { return idbDelete("files", rel); }
+  function overlayDelete(rel) { bustCaches(); return idbDelete("files", rel); }
 
   /* meta islemleri: 'del' tombstone, 'dir' olusturulan klasor, 'via:<rel>' alias */
   function metaGet(rel) { return idbGet("meta", rel); }
-  function metaSet(rel, val) { return idbPut("meta", rel, val); }
-  function metaDelete(rel) { return idbDelete("meta", rel); }
+  function metaSet(rel, val) { bustCaches(); return idbPut("meta", rel, val); }
+  function metaDelete(rel) { bustCaches(); return idbDelete("meta", rel); }
+
+  /* ---------- performans onbellekleri ----------
+   * Tema: her agac acilisi icin IndexedDB'yi tek tek sormak ve tum overlay
+   * blob'larini okumak yerine, yalnizca ANAHTARLARI (key-only) ve meta
+   * haritasini bir kez yukleyip agac sonuclarini tembel + onbellekli kurariz.
+   * overlayPut/Delete ve metaSet/Delete her seferinde bustCaches() cagirdigi
+   * icin kullanicinin yaptigi degisiklikler sonrasi onbellek kendini bozar.
+   */
+  let _fileKeySet = null; // overlay dosya anahtarlari (blob'suz)
+  let _metaMap = null;    // meta haritasi (kucuk)
+  let treeCache = new Map();
+
+  function bustCaches() {
+    treeCache.clear();
+    _fileKeySet = null;
+    _metaMap = null;
+  }
+
+  function fileKeySet() {
+    if (_fileKeySet) return Promise.resolve(_fileKeySet);
+    return db().then((d) => new Promise((res, rej) => {
+      const tx = d.transaction("files", "readonly");
+      const out = new Set();
+      const cur = tx.objectStore("files").openKeyCursor();
+      cur.onsuccess = () => { const c = cur.result; if (c) { out.add(c.key); c.continue(); } else { _fileKeySet = out; res(out); } };
+      cur.onerror = () => rej(cur.error);
+    }));
+  }
+
+  function metaMap() {
+    if (_metaMap) return Promise.resolve(_metaMap);
+    return overlayAllMeta().then((all) => {
+      const m = new Map();
+      for (const [k, v] of all) m.set(k, v);
+      _metaMap = m;
+      return m;
+    });
+  }
+
+  /* rel icin bosluk duyarlisi yardimcilar (kac akim olmadan) */
+  function viaSplit(rel, mm) {
+    const parts = rel.split("/");
+    for (let i = parts.length; i >= 0; i--) {
+      const p = parts.slice(0, i).join("/");
+      const v = mm.get(p);
+      if (typeof v === "string" && v.startsWith("via:")) return [p, v.slice(4)];
+    }
+    return null;
+  }
+  function relDel(rel, mm) {
+    const parts = rel.split("/");
+    for (let i = parts.length; i >= 0; i--) {
+      if (mm.get(parts.slice(0, i).join("/")) === "del") return true;
+    }
+    return false;
+  }
+  function nodeTypeM(rel, mm, ks) {
+    const via = viaSplit(rel, mm);
+    if (via) return nodeTypeM(via[1], mm, ks);
+    if (ks.has(rel)) return "file";
+    if (baseFiles.has(rel)) return "file";
+    if (baseFolders.has(rel)) return "folder";
+    if (mm.get(rel) === "dir") return "folder";
+    return null;
+  }
 
   function overlayAllFiles() {
     return db().then((d) => new Promise((res, rej) => {
@@ -119,49 +185,24 @@
 
   /* rel -> kaynak cozumleme (alias zinciri + overlay oncelik) */
   async function resolveRel(rel) {
-    if (await overlayGet(rel)) return { kind: "overlay", rel };
-    const parts = rel.split("/");
-    for (let i = parts.length; i >= 0; i--) {
-      const prefix = parts.slice(0, i).join("/");
-      const m = await metaGet(prefix);
-      if (m && typeof m === "string" && m.startsWith("via:")) {
-        const suffix = parts.slice(i).join("/");
-        const mapped = m.slice(4) + (suffix ? "/" + suffix : "");
-        return resolveRel(mapped);
-      }
+    const ks = await fileKeySet();
+    if (ks.has(rel)) return { kind: "overlay", rel };
+    const via = viaSplit(rel, await metaMap());
+    if (via) {
+      const mapped = via[1] + rel.slice(via[0].length);
+      return resolveRel(mapped);
     }
-    const ov = await overlayGet(rel);
-    if (ov) return { kind: "overlay", rel };
+    if (ks.has(rel)) return { kind: "overlay", rel };
     return { kind: "bundle", rel };
   }
 
   async function isDeleted(rel) {
-    const parts = rel.split("/");
-    for (let i = parts.length; i >= 0; i--) {
-      const prefix = parts.slice(0, i).join("/");
-      const m = await metaGet(prefix);
-      if (m === "del") return true;
-    }
-    return false;
+    return relDel(rel, await metaMap());
   }
 
   async function nodeType(rel) {
-    const parts = rel.split("/");
-    for (let i = parts.length; i >= 0; i--) {
-      const prefix = parts.slice(0, i).join("/");
-      const m = await metaGet(prefix);
-      if (m && typeof m === "string" && m.startsWith("via:")) {
-        const suffix = parts.slice(i).join("/");
-        const mapped = m.slice(4) + (suffix ? "/" + suffix : "");
-        return nodeType(mapped);
-      }
-    }
-    if (await overlayGet(rel)) return "file";
-    if (baseFiles.has(rel)) return "file";
-    if (baseFolders.has(rel)) return "folder";
-    const m = await metaGet(rel);
-    if (m === "dir") return "folder";
-    return null;
+    const [mm, ks] = await Promise.all([metaMap(), fileKeySet()]);
+    return nodeTypeM(rel, mm, ks);
   }
 
   function extOf(name) {
@@ -191,67 +232,78 @@
 
   async function treeOf(folderRel) {
     await manifest();
+    const cacheKey = folderRel || "";
+    if (treeCache.has(cacheKey)) return treeCache.get(cacheKey);
+    const mm = await metaMap();
+    const ks = await fileKeySet();
     const items = [];
-    const seen = new Map();
-    const base = baseChildrenOf(folderRel);
-    for (const name of base.keys()) {
-      const it = base.get(name);
-      const rel = it.rel;
-      if (await isDeleted(rel)) continue;
-      if (await nodeType(rel) === "file") {
-        const ov = await overlayGet(rel);
-        const size = ov ? ov.size : (baseFiles.get(rel) || {}).size;
-        items.push({ name: it.name, type: "file", ext: ov ? ov.ext : (it.ext || extOf(it.name)), size: size || null, children: undefined });
-      } else {
-        const children = await treeOf(rel);
-        items.push({ name: it.name, type: "folder", size: null, children });
-      }
-      seen.set(rel, true);
-    }
-    /* overlay ekli dosyalar ve olusturulan klasorler */
-    const [ovFiles, ovMeta] = await Promise.all([overlayAllFiles(), overlayAllMeta()]);
+    const seen = new Set();
     const inFolder = (rel) => {
       if (!folderRel) return rel.indexOf("/") === -1;
       return rel.startsWith(folderRel + "/") && rel.slice(folderRel.length + 1).indexOf("/") === -1;
     };
-    for (const [rel] of ovFiles) {
+
+    /* alias klasor acilinca asil icerige yonlendir (dosya alias'lari gibi) */
+    const viaSelf = viaSplit(folderRel || "", mm);
+    if (viaSelf && folderRel) {
+      const mapped = viaSelf[1] + folderRel.slice(viaSelf[0].length);
+      if (mapped !== folderRel) return treeOf(mapped);
+    }
+
+    const base = baseChildrenOf(folderRel);
+    for (const name of base.keys()) {
+      const it = base.get(name);
+      const rel = it.rel;
+      if (relDel(rel, mm)) continue;
+      if (!it.folder) {
+        let size = baseFiles.get(rel) ? baseFiles.get(rel).size : null;
+        let ext = it.ext || extOf(it.name);
+        if (ks.has(rel)) {
+          const rec = await overlayGet(rel);
+          if (rec) { size = rec.size; ext = rec.ext || ext; }
+        }
+        items.push({ name: it.name, type: "file", rel, ext, size: size || null });
+        seen.add(rel);
+      } else if (!viaSplit(rel, mm)) {
+        items.push({ name: it.name, type: "folder", rel, size: null });
+        seen.add(rel);
+      }
+    }
+    /* overlay'deki dosyalar (yalnizca bu klasoru tarar, blob okumaz) */
+    for (const rel of ks) {
+      if (!inFolder(rel) || seen.has(rel)) continue;
+      if (relDel(rel, mm)) continue;
+      const rec = await overlayGet(rel);
+      if (!rec) continue;
       const name = rel.split("/").pop();
-      if (inFolder(rel) && !seen.has(rel)) {
-        const rec = await idbGet("files", rel);
-        const ext = rec ? rec.ext : extOf(name);
-        if (!(await isDeleted(rel))) items.push({ name, type: "file", ext, size: rec ? rec.size : null, children: undefined });
-        seen.set(rel, true);
-      }
+      items.push({ name, type: "file", rel, ext: rec.ext || extOf(name), size: rec.size || null });
+      seen.add(rel);
     }
-    for (const [rel, val] of ovMeta) {
-      if (val === "dir" && inFolder(rel) && !seen.has(rel)) {
-        const name = rel.split("/").pop();
-        const children = await treeOf(rel);
-        items.push({ name, type: "folder", size: null, children });
-        seen.set(rel, true);
-      }
-    }
-    /* yeniden adlandirilan / tasinan ogeler (alias) */
-    for (const [rel, val] of ovMeta) {
-      if (typeof val === "string" && val.startsWith("via:") && inFolder(rel) && !seen.has(rel)) {
-        const name = rel.split("/").pop();
-        const oldRel = val.slice(4);
-        const t = await nodeType(oldRel);
+    /* olusturulan klasorler + alias ogeleri */
+    for (const [rel, val] of mm) {
+      if (!inFolder(rel) || seen.has(rel)) continue;
+      const name = rel.split("/").pop();
+      if (val === "dir") {
+        items.push({ name, type: "folder", rel, size: null });
+        seen.add(rel);
+      } else if (typeof val === "string" && val.startsWith("via:")) {
+        const t = nodeTypeM(rel, mm, ks);
+        if (!t) continue;
         if (t === "file") {
           const r = await resolveRel(rel);
           const rec = r.kind === "overlay" ? await overlayGet(r.rel) : baseFiles.get(r.rel);
-          items.push({ name, type: "file", ext: rec ? rec.ext : extOf(name), size: rec ? rec.size : null, children: undefined });
+          items.push({ name, type: "file", rel, ext: rec ? rec.ext : extOf(name), size: rec ? rec.size : null });
         } else {
-          const children = await treeOf(oldRel);
-          items.push({ name, type: "folder", size: null, children });
+          items.push({ name, type: "folder", rel, size: null });
         }
-        seen.set(rel, true);
+        seen.add(rel);
       }
     }
     items.sort((a, b) => {
       if (a.type !== b.type) return a.type === "folder" ? -1 : 1;
       return trColl.compare(a.name, b.name);
     });
+    treeCache.set(cacheKey, items);
     return items;
   }
 
@@ -284,11 +336,12 @@
   /* ---------- arama ---------- */
   async function doSearch(q) {
     await manifest();
+    const mm = await metaMap();
     const lower = q.toLowerCase();
     const out = [];
     const push = (it) => { if (out.length < 200) out.push(it); };
     for (const rel of baseFiles.keys()) {
-      if (await isDeleted(rel)) continue;
+      if (relDel(rel, mm)) continue;
       if (rel.toLowerCase().includes(lower)) {
         const meta = baseFiles.get(rel);
         push({ name: rel.split("/").pop(), type: "file", rel, ext: meta.ext, size: meta.size });
@@ -310,12 +363,12 @@
         }
       }
     }
-    const [ovFiles, ovMeta] = await Promise.all([overlayAllFiles(), overlayAllMeta()]);
-    for (const [rel] of ovFiles) {
-      if (await isDeleted(rel)) continue;
+    const ks = await fileKeySet();
+    for (const rel of ks) {
+      if (relDel(rel, mm)) continue;
       const name = rel.split("/").pop();
       if (name.toLowerCase().includes(lower)) {
-        const rec = await idbGet("files", rel);
+        const rec = await overlayGet(rel);
         push({ name, type: "file", rel, ext: rec ? rec.ext : extOf(name), size: rec ? rec.size : null });
       } else if (((extOf(rel) === ".txt") || (extOf(rel) === ".md")) && await smallOverlay(rel)) {
         try {
@@ -330,7 +383,7 @@
         } catch (_) {}
       }
     }
-    for (const [rel, val] of ovMeta) {
+    for (const [rel, val] of mm) {
       if (val === "dir" && rel.toLowerCase().includes(lower)) {
         push({ name: rel.split("/").pop(), type: "folder", rel });
       }
@@ -398,9 +451,9 @@
     const t = await nodeType(rel);
     if (!t) return { status: 404, error: "Bulunamadi" };
     await metaSet(rel, "del");
-    /* overlay'de gercek blob varsa temizle; alias ile gorulenler meta'da */
-    const ov = await overlayAllFiles();
-    for (const [k] of ov) {
+    /* overlay'de gercek blob varsa temizle (anahtar taramasi, blob okumaz) */
+    const ks = await fileKeySet();
+    for (const k of ks) {
       if (k === rel || (t === "folder" && k.startsWith(rel + "/"))) {
         await overlayDelete(k);
         await metaDelete(k);
@@ -685,6 +738,43 @@
   };
   window.offlineIsNative = IS_NATIVE;
   window.offlineHasData = function () { return manifest().then(Boolean); };
+
+  /* hizli sayilar: ana sayfa kartlari taban+overlay dosya adedi */
+  window.offlineCountFiles = async function (prefix) {
+    await manifest();
+    const mm = await metaMap();
+    const ks = await fileKeySet();
+    const p = prefix ? prefix + "/" : "";
+    let n = 0;
+    for (const rel of baseFiles.keys()) {
+      if (rel.startsWith(p) && !relDel(rel, mm)) n++;
+    }
+    for (const rel of ks) {
+      if (rel.startsWith(p) && !relDel(rel, mm)) n++;
+    }
+    return n;
+  };
+
+  /* tasima/folder secici icin tum klasor listesi */
+  window.offlineFolders = async function () {
+    await manifest();
+    const mm = await metaMap();
+    const ks = await fileKeySet();
+    const out = [];
+    const push = (rel) => {
+      if (!rel) return;
+      out.push({ name: rel, label: rel.split("/").join(" › ") });
+    };
+    for (const f of baseFolders) push(f);
+    for (const [rel, val] of mm) {
+      if (val === "dir") push(rel);
+      else if (typeof val === "string" && val.startsWith("via:")) {
+        if (nodeTypeM(rel, mm, ks) === "folder") push(rel);
+      }
+    }
+    out.sort((a, b) => trColl.compare(a.name, b.name));
+    return out;
+  };
 
   /* indirme islemleri gizli anchor ile */
   window.offlineDownload = async function (rel, name) {

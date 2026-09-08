@@ -154,25 +154,35 @@ function renderHome() {
   grid.className = "grid";
   grid.innerHTML = "";
 
+  const fillCount = (el, prefix, found) => {
+    if (found && found.children) {
+      el.textContent = found.children.filter((c) => c.type === "file").length + " dosya";
+      return;
+    }
+    if (window.__OFFLINE__ && window.offlineCountFiles) {
+      window.offlineCountFiles(prefix).then((n) => { el.textContent = n + " dosya"; }).catch(() => {});
+    }
+  };
+
   const topLevel = state.items;
   MAIN_CATS.forEach((cat) => {
     const found = topLevel.find((f) => f.name === cat && f.type === "folder");
-    const count = found && found.children ? found.children.filter((c) => c.type === "file").length : 0;
     const card = document.createElement("div");
     card.className = "home-card";
-    card.innerHTML = `<div class="ic">${CAT_ICONS[cat] || "📁"}</div><div class="nm">${cat}</div><div class="ct">${count} dosya</div>`;
+    card.innerHTML = `<div class="ic">${CAT_ICONS[cat] || "📁"}</div><div class="nm">${cat}</div><div class="ct">hesaplanıyor…</div>`;
     card.onclick = () => { go(cat); };
     grid.appendChild(card);
+    fillCount(card.querySelector(".ct"), cat, found);
   });
 
   topLevel.forEach((it) => {
     if (it.type === "folder" && !MAIN_CATS.includes(it.name)) {
       const card = document.createElement("div");
       card.className = "home-card";
-      const cnt = it.children ? it.children.filter((c) => c.type === "file").length : 0;
-      card.innerHTML = `<div class="ic">📁</div><div class="nm">${esc(it.name)}</div><div class="ct">${cnt} dosya</div>`;
+      card.innerHTML = `<div class="ic">📁</div><div class="nm">${esc(it.name)}</div><div class="ct">hesaplanıyor…</div>`;
       card.onclick = () => { go(it.name); };
       grid.appendChild(card);
+      fillCount(card.querySelector(".ct"), it.name, it);
     }
   });
 
@@ -404,9 +414,14 @@ function collectFolders(items, acc, prefix) {
 async function loadFolderOptions() {
   const select = document.getElementById("moveFolder");
   try {
-    const res = await dapi("/api/tree?path=");
-    const data = await res.json().catch(() => ({}));
-    const opts = [{ name: "", label: "🏠 Ana Kitaplik" }, ...collectFolders(data.items || [], [], "")];
+    let opts;
+    if (window.__OFFLINE__ && window.offlineFolders) {
+      opts = [{ name: "", label: "🏠 Ana Kitaplik" }, ...(await window.offlineFolders())];
+    } else {
+      const res = await dapi("/api/tree?path=");
+      const data = await res.json().catch(() => ({}));
+      opts = [{ name: "", label: "🏠 Ana Kitaplik" }, ...collectFolders(data.items || [], [], "")];
+    }
     const cur = state.moveRel.split("/").slice(0, -1).join("/");
     select.innerHTML = "";
     opts.forEach((o) => {
@@ -1452,7 +1467,7 @@ if (!window.__OFFLINE__ && "serviceWorker" in navigator) {
 
 load();
 
-const APP_VERSION = "v72";
+const APP_VERSION = "v73";
 const verEl = document.getElementById("appVersion");
 if (verEl) {
   verEl.textContent = "Sürüm " + APP_VERSION + " · APK DiniKutuphane-" + APP_VERSION + ".apk";
